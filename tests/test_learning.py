@@ -415,6 +415,53 @@ class TestLearningEngine:
         assert stats["avg_confidence"] == 0.8
 
 
+class TestBaselineSolverLessonInjection:
+    """Tests for lesson injection in BaselineSolver."""
+
+    def test_baseline_with_lesson_injection_disabled(self):
+        """BaselineSolver should work without lesson injection."""
+        from eval.solvers.baseline import BaselineSolver
+
+        solver = BaselineSolver(inject_lessons=False)
+        assert solver.inject_lessons is False
+        assert solver._learning_engine is None
+
+    def test_baseline_with_lesson_injection_enabled(self, tmp_path):
+        """BaselineSolver should enable lesson injection."""
+        from eval.solvers.baseline import BaselineSolver
+
+        solver = BaselineSolver(
+            inject_lessons=True,
+            lessons_dir=tmp_path / "lessons"
+        )
+        assert solver.inject_lessons is True
+
+    def test_metadata_includes_injection_info(self):
+        """Metadata should include injection settings."""
+        from eval.solvers.baseline import BaselineSolver
+
+        solver = BaselineSolver(inject_lessons=True, max_lessons=5)
+        metadata = solver.metadata
+
+        assert metadata["inject_lessons"] is True
+        assert metadata["max_lessons"] == 5
+
+    def test_extract_context(self):
+        """Should extract context from state."""
+        from eval.solvers.baseline import BaselineSolver
+        from unittest.mock import MagicMock
+
+        solver = BaselineSolver()
+
+        # Mock state with input
+        state = MagicMock()
+        state.input = "What is 2+2?"
+        state.messages = []
+
+        context = solver._extract_context(state)
+        assert "2+2" in context
+
+
 class TestCustomSolverLoading:
     """Tests for custom solver loading (Phase 5)."""
 

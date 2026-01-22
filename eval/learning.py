@@ -366,7 +366,8 @@ class LearningEngine:
         episodes: list[dict],
         run_id: str,
         benchmark: str,
-        solver: str
+        solver: str,
+        use_llm: bool = False
     ) -> list[CandidateLesson]:
         """Extract candidate lessons from a batch of episodes.
 
@@ -377,6 +378,7 @@ class LearningEngine:
             run_id: ID of the evaluation run
             benchmark: Benchmark name
             solver: Solver name
+            use_llm: Whether to use LLM for extraction (default: pattern-based)
 
         Returns:
             List of extracted CandidateLessons
@@ -412,14 +414,21 @@ class LearningEngine:
         # Generate unique lesson ID prefix
         timestamp = datetime.now(timezone.utc).strftime("%Y%m%d_%H%M%S")
 
-        # For now, do simple pattern-based extraction without LLM
-        # This can be upgraded to LLM-based extraction later
-        candidates = self._extract_pattern_based(
-            analysis_episodes,
-            timestamp,
-            benchmark,
-            solver
-        )
+        # Choose extraction method
+        if use_llm:
+            candidates = self._extract_llm_based(
+                analysis_episodes,
+                timestamp,
+                benchmark,
+                solver
+            )
+        else:
+            candidates = self._extract_pattern_based(
+                analysis_episodes,
+                timestamp,
+                benchmark,
+                solver
+            )
 
         # Deduplicate
         unique_candidates = []
@@ -429,6 +438,89 @@ class LearningEngine:
                 unique_candidates.append(candidate)
 
         return unique_candidates
+
+    def _extract_llm_based(
+        self,
+        episodes: list[dict],
+        timestamp: str,
+        benchmark: str,
+        solver: str
+    ) -> list[CandidateLesson]:
+        """Extract lessons using LLM analysis.
+
+        Uses Claude to analyze episodes and extract actionable lessons.
+        """
+        import anthropic
+
+        # Prepare episode summaries for the prompt (reduce context size)
+        episode_summaries = []
+        for ep in episodes:
+            summary = {
+                "sample_id": ep.get("sample_id"),
+                "passed": ep.get("outcome", {}).get("passed", False),
+                "failure_mode": ep.get("outcome", {}).get("failure_mode"),
+                "input_preview": str(ep.get("context", {}).get("input", ""))[:200],
+                "output_preview": str(ep.get("action", {}).get("output", ""))[:200],
+            }
+            # Include trace summary if available
+            traces = ep.get("traces", [])
+            if traces:
+                summary["trace_count"] = len(traces)
+                summary["trace_types"] = list(set(t.get("type", "unknown") for t in traces[:10]))
+            episode_summaries.append(summary)
+
+        prompt = EXTRACTION_PROMPT.format(
+            episodes_json=json.dumps(episode_summaries, indent=2)
+        )
+
+        try:
+            client = anthropic.Anthropic()
+            response = client.messages.create(
+                model="claude-sonnet-4-20250514",
+                max_tokens=2000,
+                messages=[
+                    {"role": "user", "content": prompt}
+                ]
+            )
+
+            # Parse the response
+            response_text = response.content[0].text
+
+            # Try to extract JSON from the response
+            # Handle cases where response might have markdown code blocks
+            if "```json" in response_text:
+                json_start = response_text.find("```json") + 7
+                json_end = response_text.find("```", json_start)
+                response_text = response_text[json_start:json_end].strip()
+            elif "```" in response_text:
+                json_start = response_text.find("```") + 3
+                json_end = response_text.find("```", json_start)
+                response_text = response_text[json_start:json_end].strip()
+
+            parsed = json.loads(response_text)
+            lessons_data = parsed.get("lessons", [])
+
+            candidates = []
+            for i, lesson_data in enumerate(lessons_data):
+                candidate = CandidateLesson(
+                    lesson_id=f"lesson_{timestamp}_llm_{i}",
+                    episode_ids=[ep["sample_id"] for ep in episode_summaries[:5]],
+                    what=lesson_data.get("what", ""),
+                    why=lesson_data.get("why", ""),
+                    expected=lesson_data.get("expected", ""),
+                    triggers=lesson_data.get("triggers", [benchmark]),
+                    confidence=float(lesson_data.get("confidence", 0.7)),
+                    source_benchmark=benchmark,
+                    source_solver=solver,
+                )
+                candidates.append(candidate)
+
+            return candidates
+
+        except Exception as e:
+            # Fall back to pattern-based extraction on error
+            print(f"LLM extraction failed ({e}), falling back to pattern-based")
+            return self._extract_pattern_based(episodes, timestamp, benchmark, solver)
 
     def _extract_pattern_based(
         self,

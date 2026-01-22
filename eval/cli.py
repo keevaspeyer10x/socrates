@@ -420,10 +420,14 @@ def _load_episodes(episodes_dir: Path) -> list[dict]:
 
 @cli.command()
 @click.argument("run_id")
-def learn(run_id: str):
+@click.option("--llm", is_flag=True, help="Use LLM for deeper lesson extraction (costs tokens)")
+def learn(run_id: str, llm: bool):
     """Extract lessons from an evaluation run.
 
     RUN_ID is the run identifier to extract lessons from.
+
+    By default, uses pattern-based extraction (free, fast).
+    Use --llm for deeper analysis using Claude (costs tokens).
     """
     import json
     from .learning import LearningEngine
@@ -448,7 +452,8 @@ def learn(run_id: str):
         click.echo("No episodes found to analyze.")
         sys.exit(1)
 
-    click.echo(f"Analyzing {len(episodes)} episodes from run {run_id}...")
+    method = "LLM-based" if llm else "pattern-based"
+    click.echo(f"Analyzing {len(episodes)} episodes from run {run_id} ({method})...")
     click.echo()
 
     # Extract lessons
@@ -457,7 +462,8 @@ def learn(run_id: str):
         episodes,
         run_id,
         summary["benchmark"],
-        summary["solver"]
+        summary["solver"],
+        use_llm=llm
     )
 
     if not candidates:
