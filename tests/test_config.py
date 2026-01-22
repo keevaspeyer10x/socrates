@@ -1,0 +1,86 @@
+"""Tests for eval/config.py - API key management."""
+
+import os
+import pytest
+from pathlib import Path
+
+
+class TestAPIKeyManager:
+    """Tests for API key loading and validation."""
+
+    def test_load_key_from_env(self, monkeypatch):
+        """API key should be loaded from environment variable."""
+        monkeypatch.setenv("ANTHROPIC_API_KEY", "sk-ant-test123")
+
+        from eval.config import APIKeyManager
+        manager = APIKeyManager()
+
+        assert manager.get_key("anthropic") == "sk-ant-test123"
+
+    def test_missing_key_returns_none(self, monkeypatch):
+        """Missing API key should return None, not raise."""
+        monkeypatch.delenv("ANTHROPIC_API_KEY", raising=False)
+
+        from eval.config import APIKeyManager
+        manager = APIKeyManager()
+
+        assert manager.get_key("anthropic") is None
+
+    def test_mask_key_for_logging(self):
+        """API key should be masked for safe logging."""
+        from eval.config import mask_api_key
+
+        assert mask_api_key("sk-ant-api03-abcdefghijk") == "...hijk"
+        assert mask_api_key("short") == "...hort"
+        assert mask_api_key(None) == "not set"
+        assert mask_api_key("") == "not set"
+
+    def test_validate_required_keys(self, monkeypatch):
+        """Should return dict of model -> bool for key availability."""
+        monkeypatch.setenv("ANTHROPIC_API_KEY", "sk-test")
+        monkeypatch.delenv("OPENAI_API_KEY", raising=False)
+
+        from eval.config import APIKeyManager
+        manager = APIKeyManager()
+
+        result = manager.validate_for_models([
+            "anthropic/claude-sonnet-4-20250514",
+            "openai/gpt-4o"
+        ])
+
+        assert result["anthropic/claude-sonnet-4-20250514"] is True
+        assert result["openai/gpt-4o"] is False
+
+    def test_get_missing_keys(self, monkeypatch):
+        """Should return list of missing API keys."""
+        monkeypatch.setenv("ANTHROPIC_API_KEY", "sk-test")
+        monkeypatch.delenv("OPENAI_API_KEY", raising=False)
+
+        from eval.config import APIKeyManager
+        manager = APIKeyManager()
+
+        missing = manager.get_missing_keys([
+            "anthropic/claude-sonnet-4-20250514",
+            "openai/gpt-4o"
+        ])
+
+        assert "openai/gpt-4o" in missing
+        assert "anthropic/claude-sonnet-4-20250514" not in missing
+
+
+class TestBenchmarkRequirements:
+    """Tests for benchmark requirement mapping."""
+
+    def test_swe_bench_requires_docker(self):
+        """SWE-bench should require Docker."""
+        from eval.config import BenchmarkRequirements
+
+        assert BenchmarkRequirements.requires_docker("swe_bench")
+        assert BenchmarkRequirements.requires_docker("swe_bench_verified")
+
+    def test_gsm8k_no_docker(self):
+        """GSM8K should not require Docker."""
+        from eval.config import BenchmarkRequirements
+
+        assert not BenchmarkRequirements.requires_docker("gsm8k")
+        assert not BenchmarkRequirements.requires_docker("mmlu")

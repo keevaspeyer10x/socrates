@@ -1,0 +1,42 @@
+[project]
+name = "socrates"
+version = "0.1.0"
+description = "An iterative, self-learning engine for AI agents"
+readme = "README.md"
+requires-python = ">=3.11"
+license = {text = "MIT"}
+authors = [
+    {name = "Socrates Team"}
+]
+dependencies = [
+    "click>=8.0",
+    "pydantic>=2.0",
+]
+
+[project.optional-dependencies]
+eval = [
+    "inspect-ai>=0.3.150",
+    "inspect-evals>=0.1.0",
+]
+dev = [
+    "pytest>=7.0",
+    "pytest-asyncio>=0.21",
+]
+all = [
+    "socrates[eval,dev]",
+]
+
+[project.scripts]
+socrates-eval = "eval.cli:main"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+python_files = ["test_*.py"]
+asyncio_mode = "auto"
+
+[tool.hatch.build.targets.wheel]
+packages = ["eval"]
