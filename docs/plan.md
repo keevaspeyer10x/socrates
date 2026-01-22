@@ -1,196 +1,73 @@
-# Inspect Eval Integration Plan for Socrates
+# Plan: Issue #4 - HumanEval and MBPP Evals Setup
 
-## Goal
-Build an evaluation harness with pluggable solvers to compare baseline (single model) vs minds (multi-model) vs custom agents on standard benchmarks. Enable rapid iteration and validation of AI agent designs.
+## Summary
 
-## Phase 0 Findings (Completed)
+Add HumanEval and MBPP benchmarks to the Socrates evaluation framework for rapid coding agent iteration with fast feedback loops.
 
-Key discoveries from spike:
-- **Inspect Log Structure**: `EvalLog` → `EvalSample` → `events` (ToolEvent/ModelEvent)
-- **Docker Required**: SWE-bench and GAIA need Docker for sandboxed execution
-- **Non-Docker Benchmarks**: GSM8K, MMLU, HumanEval work without Docker
-- **API Keys**: Must align with Inspect's env var names (`ANTHROPIC_API_KEY`, etc.)
+## Decisions Made
 
-## Core Architecture: Pluggable Solvers
+| Decision | Choice | Rationale |
+|----------|--------|-----------|
+| Docker requirement | No (NO_DOCKER) | Simpler setup, faster iteration |
+| MBPP temperature | 0.5 | Matches inspect_evals default |
+| Mini-validation subset | Yes, 20 problems each | Consistent comparison across runs |
+| HumanEval epochs | 5 (standard), 1 (fast variant) | User requested fast variant for rapid iteration |
 
-```
-┌─────────────────────────────────────────────────────────────┐
-│                    INSPECT EVAL HARNESS                      │
-├─────────────────────────────────────────────────────────────┤
-│  Dataset: SWE-bench / GAIA / GSM8K / MMLU                   │
-├─────────────────────────────────────────────────────────────┤
-│                      SOLVER (pluggable)                      │
-│  ┌──────────┐  ┌──────────┐  ┌──────────┐  ┌──────────┐    │
-│  │ baseline │  │  minds   │  │ agent-v1 │  │ agent-v2 │    │
-│  └──────────┘  └──────────┘  └──────────┘  └──────────┘    │
-├─────────────────────────────────────────────────────────────┤
-│  Scorer: Same for all (did it solve the problem?)           │
-└─────────────────────────────────────────────────────────────┘
-```
+## Implementation Tasks
 
-## Project Structure (Updated from Phase 0)
+### 1. Update config.py - Add MBPP to NO_DOCKER set
+- File: `eval/config.py`
+- Change: Add `"mbpp"` to `NO_DOCKER` set (humaneval already present)
 
-```
-socrates/
-├── .claude/commands/
-│   └── inspect-eval.md          # CLI command spec
-├── eval/
-│   ├── __init__.py
-│   ├── cli.py                    # CLI entry point
-│   ├── config.py                 # API key management
-│   ├── preflight.py              # Environment validation
-│   ├── state.py                  # State machine, data models
-│   ├── runner.py                 # Orchestrates eval runs
-│   ├── compare.py                # Cross-run comparison + stats
-│   ├── adapters/
-│   │   ├── __init__.py
-│   │   └── inspect_adapter.py    # Event-first extraction
-│   └── solvers/
-│       ├── __init__.py           # Solver base class + registry
-│       ├── baseline.py           # Single model (wraps Inspect)
-│       └── minds.py              # Multi-model collaboration
-├── .env.example                  # API key template
-├── .eval_state.json              # Current state
-├── eval_logs/
-│   └── runs/{run_id}/
-│       ├── config.json
-│       ├── summary.json
-│       └── episodes/
-└── pyproject.toml
-```
+### 2. Update cli.py - Add benchmark tasks
+- File: `eval/cli.py`
+- Function: `_get_benchmark_task()`
+- Add cases for:
+  - `humaneval` - 5 epochs (standard)
+  - `humaneval_fast` - 1 epoch (rapid iteration)
+  - `mbpp` - temperature 0.5
 
-## Implementation Phases
+### 3. Create mini-validation sample files
+- File: `eval_mini_humaneval.json` - 20 curated HumanEval problem IDs
+- File: `eval_mini_mbpp.json` - 20 curated MBPP problem IDs
 
-### Phase 1: Core Infrastructure (Current)
+### 4. Update documentation
+- File: `README.md` - Add HumanEval/MBPP to quick start examples
+- Add example commands for mini-validation runs
 
-#### 1.1 Config & Preflight
-- [ ] Create `eval/config.py` - API key loading from .env
-- [ ] Create `eval/preflight.py` - Docker/key/Python validation
-- [ ] Create `.env.example` template
-- [ ] Add benchmark requirements mapping (Docker vs no-Docker)
+### 5. Add tests
+- File: `tests/test_cli.py` - Test new benchmark task creation
 
-#### 1.2 Core Data Models
-- [ ] Create `eval/state.py` with:
-  - `EvalState` - workflow state machine
-  - `Episode` - 4-tuple format (context, traces, action, outcome)
-  - `RunConfig` - solver, model, benchmark, samples
-  - `RunSummary` - results with confidence intervals
+## Execution Strategy
 
-#### 1.3 Inspect Adapter (Event-First)
-- [ ] Create `eval/adapters/inspect_adapter.py`
-- [ ] Extract from `ToolEvent` → action traces
-- [ ] Extract from `ModelEvent` → rationale
-- [ ] Map `sample.scores` → outcome with failure taxonomy
-- [ ] Map `sample.model_usage` → cost
+**Sequential execution** - Tasks are interdependent (config changes needed before CLI, CLI before docs).
 
-#### 1.4 Baseline Solver
-- [ ] Create `eval/solvers/__init__.py` - base class + registry
-- [ ] Create `eval/solvers/baseline.py` - wraps Inspect generate()
+Order: config.py -> cli.py -> mini samples -> README -> tests
 
-#### 1.5 CLI Foundation
-- [ ] Create `eval/cli.py` with Click
-- [ ] Implement `socrates-eval preflight` - environment check
-- [ ] Implement `socrates-eval run <benchmark> --solver <name>`
-- [ ] Implement `socrates-eval status`
-- [ ] Implement `socrates-eval results [run_id]`
-
-#### 1.6 Smoke Test
-- [ ] Run GSM8K with 2-3 samples (no Docker needed)
-- [ ] Verify episode extraction works
-- [ ] Validate cost tracking
-
-### Phase 2: Minds Solver
-- [ ] Implement `MindsSolver` using Inspect's `get_model()`
-- [ ] Add per-provider rate limiting
-- [ ] Test on GSM8K first (no Docker)
-
-### Phase 3: Comparison & Analysis
-- [ ] Implement statistical metrics (Wilson CI, McNemar test)
-- [ ] Add failure taxonomy classification
-- [ ] Implement `compare` and `analyze` CLI commands
-
-### Phase 4: Learning Pipeline
-- [ ] Episode logging with observable traces
-- [ ] Lesson extraction with structured format
-- [ ] Human review CLI flow
-
-### Phase 5: Custom Solver Support
-- [ ] Solver registration from external files
-- [ ] Template for custom agents
-
-## Benchmark Requirements
-
-| Benchmark | Docker | API Keys | Notes |
-|-----------|--------|----------|-------|
-| GSM8K | No | Anthropic/OpenAI | Math word problems, good for smoke tests |
-| MMLU | No | Anthropic/OpenAI | Multiple choice, fast |
-| HumanEval | No* | Anthropic/OpenAI | *Local Python exec |
-| SWE-bench | **Yes** | Anthropic/OpenAI | Full sandbox required |
-| GAIA | **Yes** | Anthropic/OpenAI | Web browsing sandbox |
-
-## API Key Configuration
+## Target Quick Start
 
 ```bash
-# .env.example
-ANTHROPIC_API_KEY=sk-ant-...
-OPENAI_API_KEY=sk-...
-GOOGLE_API_KEY=...
-XAI_API_KEY=...
+# Full HumanEval run (5 epochs, standard benchmarking)
+socrates-eval run humaneval --solver baseline --model anthropic/claude-sonnet-4-20250514
+
+# Fast HumanEval iteration (1 epoch)
+socrates-eval run humaneval_fast --solver baseline --samples 20
+
+# MBPP run
+socrates-eval run mbpp --solver baseline --samples 20
+
+# Mini-validation (near-instant feedback)
+socrates-eval run humaneval_fast --solver baseline --sample-ids eval_mini_humaneval.json
 ```
 
-## Episode Format (4-Tuple + Traces)
+## Files to Modify
 
-```json
-{
-  "sample_id": "gsm8k_42",
-  "context": {
-    "input": "Problem statement...",
-    "target": "Expected answer"
-  },
-  "traces": [
-    {"type": "model", "content": "Let me think...", "tokens": 150},
-    {"type": "tool", "function": "calculator", "args": {}, "result": "42"}
-  ],
-  "action": {
-    "output": "The answer is 42",
-    "tool_calls_count": 1
-  },
-  "outcome": {
-    "passed": true,
-    "score": 1.0,
-    "failure_mode": null
-  },
-  "cost": {"input_tokens": 500, "output_tokens": 200, "usd": 0.01}
-}
-```
+1. `eval/config.py` - Add mbpp to NO_DOCKER
+2. `eval/cli.py` - Add humaneval, humaneval_fast, mbpp to _get_benchmark_task()
+3. `README.md` - Update documentation
+4. `tests/test_cli.py` - Add tests (if exists, otherwise create minimal test)
 
-## Preflight Command Output
+## Files to Create
 
-```
-$ socrates-eval preflight
-
-Socrates Evaluation Framework - Preflight Check
-================================================
-
-Python:     ✓ 3.12.0 (required: 3.11+)
-Inspect AI: ✓ 0.3.163
-
-API Keys:
-  ANTHROPIC_API_KEY: ✓ configured
-  OPENAI_API_KEY:    ✓ configured
-  GOOGLE_API_KEY:    ✗ missing
-
-Docker:     ✗ not available
-  → SWE-bench and GAIA benchmarks will be unavailable
-  → GSM8K, MMLU, HumanEval will work
-
-Ready for: gsm8k, mmlu, humaneval
-Blocked:   swe_bench, gaia (requires Docker)
-```
-
-## Verification
-
-1. `socrates-eval preflight` passes
-2. `socrates-eval run gsm8k --solver baseline --samples 3` completes
-3. `socrates-eval results` shows episode data with cost
-4. Episodes contain traces from ToolEvent/ModelEvent
+1. `eval_mini_humaneval.json` - 20 sample IDs for quick validation
+2. `eval_mini_mbpp.json` - 20 sample IDs for quick validation

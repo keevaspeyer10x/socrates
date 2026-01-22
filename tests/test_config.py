@@ -87,3 +87,16 @@ class TestBenchmarkRequirements:
 
         assert not BenchmarkRequirements.requires_docker("gsm8k")
         assert not BenchmarkRequirements.requires_docker("mmlu")
+
+    def test_humaneval_no_docker(self):
+        """HumanEval should not require Docker (for fast iteration)."""
+        from eval.config import BenchmarkRequirements
+
+        assert not BenchmarkRequirements.requires_docker("humaneval")
+        assert not BenchmarkRequirements.requires_docker("humaneval_fast")
+
+    def test_mbpp_no_docker(self):
+        """MBPP should not require Docker."""
+        from eval.config import BenchmarkRequirements
+
+        assert not BenchmarkRequirements.requires_docker("mbpp")

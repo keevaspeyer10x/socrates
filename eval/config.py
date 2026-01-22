@@ -158,6 +158,8 @@ class BenchmarkRequirements:
         "gsm8k",
         "mmlu",
         "humaneval",
+        "humaneval_fast",
+        "mbpp",
         "arc",
         "hellaswag",
         "truthfulqa",

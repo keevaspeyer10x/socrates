@@ -53,7 +53,8 @@ def status():
 @click.option("--solver", default="baseline", help="Solver to use")
 @click.option("--model", default="anthropic/claude-sonnet-4-20250514", help="Model for evaluation")
 @click.option("--samples", type=int, default=None, help="Limit number of samples")
-def run(benchmark: str, solver: str, model: str, samples: Optional[int]):
+@click.option("--sample-ids", type=str, default=None, help="JSON file with sample indices or comma-separated IDs")
+def run(benchmark: str, solver: str, model: str, samples: Optional[int], sample_ids: Optional[str]):
     """Run evaluation on a benchmark.
 
     BENCHMARK is the name of the benchmark (e.g., gsm8k, mmlu, swe_bench).
@@ -83,21 +84,38 @@ def run(benchmark: str, solver: str, model: str, samples: Optional[int]):
     from datetime import datetime
     run_id = f"{datetime.now().strftime('%Y%m%d_%H%M%S')}_{benchmark}_{solver}"
 
+    # Parse sample IDs if provided (can be string IDs or integers)
+    parsed_sample_ids: Optional[list[str | int]] = None
+    if sample_ids:
+        if sample_ids.endswith('.json'):
+            import json
+            parsed_sample_ids = json.loads(Path(sample_ids).read_text())
+        else:
+            # Try to parse as integers, otherwise keep as strings
+            raw_ids = [x.strip() for x in sample_ids.split(',')]
+            try:
+                parsed_sample_ids = [int(x) for x in raw_ids]
+            except ValueError:
+                parsed_sample_ids = raw_ids
+
     click.echo(f"Starting evaluation: {benchmark}")
     click.echo(f"  Solver: {solver}")
     click.echo(f"  Model: {model}")
-    click.echo(f"  Samples: {samples or 'all'}")
+    if parsed_sample_ids:
+        click.echo(f"  Samples: {len(parsed_sample_ids)} (custom selection)")
+    else:
+        click.echo(f"  Samples: {samples or 'all'}")
     click.echo(f"  Run ID: {run_id}")
     click.echo()
 
     # Update state
     state = EvalState.load(STATE_FILE)
-    state.start_run(run_id, benchmark, solver, samples or 0)
+    state.start_run(run_id, benchmark, solver, len(parsed_sample_ids) if parsed_sample_ids else (samples or 0))
     state.save(STATE_FILE)
 
     # Run evaluation with try...finally for state cleanup (LEARNINGS recommendation)
     try:
-        _run_evaluation(benchmark, solver, model, samples, run_id)
+        _run_evaluation(benchmark, solver, model, samples, run_id, parsed_sample_ids)
         state.finish_run()
         state.save(STATE_FILE)
 
@@ -114,7 +132,14 @@ def run(benchmark: str, solver: str, model: str, samples: Optional[int]):
             state.save(STATE_FILE)
 
 
-def _run_evaluation(benchmark: str, solver: str, model: str, samples: Optional[int], run_id: str):
+def _run_evaluation(
+    benchmark: str,
+    solver: str,
+    model: str,
+    samples: Optional[int],
+    run_id: str,
+    sample_ids: Optional[list[str | int]] = None
+):
     """Internal function to run evaluation."""
     from inspect_ai import eval as inspect_eval
     from inspect_ai.log import read_eval_log
@@ -129,12 +154,35 @@ def _run_evaluation(benchmark: str, solver: str, model: str, samples: Optional[i
     log_dir = LOGS_DIR / "runs" / run_id
     log_dir.mkdir(parents=True, exist_ok=True)
 
+    # Get the solver if not using baseline
+    # Inspect AI expects a callable decorated with @solver
+    inspect_solver = None
+    if solver != "baseline":
+        from inspect_ai.solver import solver as solver_decorator
+
+        solver_class = get_solver(solver)
+        solver_instance = solver_class()
+        click.echo(f"Using solver: {solver_instance.name}")
+
+        # Create an Inspect-compatible solver using the @solver decorator
+        # The decorator returns a factory function. Calling it returns the actual
+        # solver function with registry_params set (required by Inspect AI).
+        @solver_decorator(name=solver_instance.name)
+        def custom_solver():
+            async def solve(state, generate):
+                return await solver_instance.solve(state, generate)
+            return solve
+
+        inspect_solver = custom_solver()  # Call it to get solver with registry_params
+
     # Run Inspect evaluation
     click.echo("Running Inspect evaluation...")
     results = inspect_eval(
         task,
         model=model,
-        limit=samples,
+        solver=inspect_solver,
+        limit=samples if not sample_ids else None,
+        sample_id=sample_ids,
         log_dir=str(log_dir / "inspect_logs"),
     )
 
@@ -184,7 +232,7 @@ def _run_evaluation(benchmark: str, solver: str, model: str, samples: Optional[i
 
 def _get_benchmark_task(benchmark: str):
     """Get Inspect task for a benchmark."""
-    benchmark = benchmark.lower().replace("-", "_")
+    benchmark = benchmark.lower().replace("-", "_").replace("human_eval", "humaneval")
 
     if benchmark == "gsm8k":
         from inspect_evals.gsm8k import gsm8k
@@ -195,6 +243,15 @@ def _get_benchmark_task(benchmark: str):
     elif benchmark in ("swe_bench", "swe_bench_verified"):
         from inspect_evals.swe_bench import swe_bench
         return swe_bench()
+    elif benchmark == "humaneval":
+        from inspect_evals.humaneval import humaneval
+        return humaneval()  # Default: 5 epochs for pass@k metrics
+    elif benchmark == "humaneval_fast":
+        from inspect_evals.humaneval import humaneval
+        return humaneval(epochs=1)  # Fast mode: 1 epoch for rapid iteration
+    elif benchmark == "mbpp":
+        from inspect_evals.mbpp import mbpp
+        return mbpp(temperature=0.5)
     else:
         raise ValueError(f"Unknown benchmark: {benchmark}")
 
@@ -291,9 +348,14 @@ def compare(run_a_id: str, run_b_id: str):
         click.echo(f"Run not found: {run_b_id}")
         sys.exit(1)
 
-    # Load summaries
+    # Load summaries (filter out computed properties not in the dataclass)
     summary_a = json.loads((run_a_dir / "summary.json").read_text())
     summary_b = json.loads((run_b_dir / "summary.json").read_text())
+
+    # Remove computed properties that shouldn't be passed to __init__
+    for key in ['cost_per_success']:
+        summary_a.pop(key, None)
+        summary_b.pop(key, None)
 
     run_a = RunSummary(**summary_a)
     run_b = RunSummary(**summary_b)

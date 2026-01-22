@@ -79,6 +79,14 @@ socrates-eval preflight
 
 # Run baseline evaluation
 socrates-eval run gsm8k --solver baseline --samples 10
+
+# Code generation benchmarks (fast feedback loops)
+socrates-eval run humaneval_fast --solver baseline --samples 20  # 1 epoch, rapid iteration
+socrates-eval run humaneval --solver baseline --samples 20       # 5 epochs, standard benchmarking
+socrates-eval run mbpp --solver baseline --samples 20
+
+# Mini-validation with curated samples (near-instant feedback)
+socrates-eval run humaneval_fast --solver baseline --sample-ids eval_mini_humaneval.json
 ```
 
 ### Features
@@ -86,7 +94,7 @@ socrates-eval run gsm8k --solver baseline --samples 10
 - **Pluggable Solvers**: Compare baseline (single model) vs minds (multi-model) vs custom agents
 - **Episode Logging**: 4-tuple format (context, traces, action, outcome) for learning
 - **Cost Tracking**: Automatic USD cost calculation per evaluation
-- **Benchmark Support**: GSM8K, MMLU, HumanEval (no Docker), SWE-bench, GAIA (Docker required)
+- **Benchmark Support**: GSM8K, MMLU, HumanEval, HumanEval-Fast, MBPP (no Docker), SWE-bench, GAIA (Docker required)
 
 ### CLI Commands
 
