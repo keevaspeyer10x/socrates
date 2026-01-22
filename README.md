@@ -64,21 +64,58 @@ A unified framework for how AI agents think, act, and learn:
 - [Multi-Model Collaboration Phase 3](docs/research/multi-model-collaboration-phase3.md) - Workflow execution
 - [Multi-Model Collaboration Phase 4](docs/research/multi-model-collaboration-phase4.md) - Deep iteration
 
+## Evaluation Framework
+
+Socrates includes an evaluation harness built on [Inspect AI](https://github.com/UKGovernmentBEIS/inspect_ai) for empirically validating AI agent designs.
+
+### Quick Start
+
+```bash
+# Install with eval dependencies
+pip install -e ".[eval]"
+
+# Check environment
+socrates-eval preflight
+
+# Run baseline evaluation
+socrates-eval run gsm8k --solver baseline --samples 10
+```
+
+### Features
+
+- **Pluggable Solvers**: Compare baseline (single model) vs minds (multi-model) vs custom agents
+- **Episode Logging**: 4-tuple format (context, traces, action, outcome) for learning
+- **Cost Tracking**: Automatic USD cost calculation per evaluation
+- **Benchmark Support**: GSM8K, MMLU, HumanEval (no Docker), SWE-bench, GAIA (Docker required)
+
+### CLI Commands
+
+```bash
+socrates-eval preflight    # Check environment readiness
+socrates-eval run <bench>  # Run evaluation
+socrates-eval status       # Show current state
+socrates-eval results      # View run results
+socrates-eval solvers      # List available solvers
+```
+
+See [docs/plan.md](docs/plan.md) for the full implementation plan.
+
 ## Status
 
-**Research Phase** - Validating concepts before building.
+**Phase 1 Complete** - Evaluation framework core infrastructure.
 
-Key findings from dogfooding:
-- Need empirical validation (baselines, A/B tests, measurements)
-- Complexity must be EARNED through measured failure of simpler approaches
-- Eval framework needed before more iteration
+- Preflight checks (Docker, API keys, Python version)
+- State persistence and episode logging
+- Inspect AI adapter for log extraction
+- Baseline solver implementation
+- CLI with run/status/results commands
 
-## Next Steps
+### Next Steps
 
-1. Set up evaluation framework (considering [Inspect](https://github.com/UKGovernmentBEIS/inspect_ai))
-2. Establish baselines
-3. Run actual experiments to validate claims
-4. Build only what's proven to help
+1. Phase 2: Implement MindsSolver for multi-model collaboration
+2. Phase 3: Statistical comparison (Wilson CI, McNemar test)
+3. Phase 4: Learning pipeline for lesson extraction
+4. Phase 5: Custom solver support
 
 ## Research Budget
 

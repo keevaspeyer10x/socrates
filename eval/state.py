@@ -2,7 +2,7 @@
 
 import json
 from dataclasses import dataclass, field, asdict
-from datetime import datetime
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import Optional, Literal, Any
 
@@ -49,7 +49,7 @@ class Episode:
 
     def __post_init__(self):
         if self.timestamp is None:
-            self.timestamp = datetime.utcnow().isoformat()
+            self.timestamp = datetime.now(timezone.utc).isoformat()
 
     def to_json(self) -> str:
         """Serialize to JSON string."""
@@ -126,7 +126,7 @@ class EvalState:
     current_solver: Optional[str] = None
     samples_completed: int = 0
     samples_total: int = 0
-    last_updated: str = field(default_factory=lambda: datetime.utcnow().isoformat())
+    last_updated: str = field(default_factory=lambda: datetime.now(timezone.utc).isoformat())
 
     def start_run(self, run_id: str, benchmark: str, solver: str, total_samples: int = 0):
         """Start a new evaluation run."""
@@ -136,17 +136,17 @@ class EvalState:
         self.current_solver = solver
         self.samples_completed = 0
         self.samples_total = total_samples
-        self.last_updated = datetime.utcnow().isoformat()
+        self.last_updated = datetime.now(timezone.utc).isoformat()
 
     def complete_sample(self):
         """Mark one sample as complete."""
         self.samples_completed += 1
-        self.last_updated = datetime.utcnow().isoformat()
+        self.last_updated = datetime.now(timezone.utc).isoformat()
 
     def finish_run(self):
         """Mark run as complete."""
         self.phase = "IDLE"
-        self.last_updated = datetime.utcnow().isoformat()
+        self.last_updated = datetime.now(timezone.utc).isoformat()
 
     def to_json(self) -> str:
         """Serialize to JSON string."""
