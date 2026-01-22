@@ -17,6 +17,7 @@ dependencies = [
 eval = [
     "inspect-ai>=0.3.150",
     "inspect-evals>=0.1.0",
+    "scipy>=1.11.0",
 ]
 dev = [
     "pytest>=7.0",

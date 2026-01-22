@@ -265,6 +265,153 @@ def solvers():
         click.echo(f"  - {name}")
 
 
+@cli.command()
+@click.argument("run_a_id")
+@click.argument("run_b_id")
+def compare(run_a_id: str, run_b_id: str):
+    """Compare two evaluation runs with statistical analysis.
+
+    RUN_A_ID and RUN_B_ID are the run identifiers to compare.
+    """
+    import json
+    from .compare import compare_runs, wilson_score_interval
+    from .state import RunSummary
+
+    # Load run A
+    run_a_dir = LOGS_DIR / "runs" / run_a_id
+    if not run_a_dir.exists():
+        click.echo(f"Run not found: {run_a_id}")
+        sys.exit(1)
+
+    # Load run B
+    run_b_dir = LOGS_DIR / "runs" / run_b_id
+    if not run_b_dir.exists():
+        click.echo(f"Run not found: {run_b_id}")
+        sys.exit(1)
+
+    # Load summaries
+    summary_a = json.loads((run_a_dir / "summary.json").read_text())
+    summary_b = json.loads((run_b_dir / "summary.json").read_text())
+
+    run_a = RunSummary(**summary_a)
+    run_b = RunSummary(**summary_b)
+
+    # Load episodes
+    episodes_a = _load_episodes(run_a_dir / "episodes")
+    episodes_b = _load_episodes(run_b_dir / "episodes")
+
+    # Run comparison
+    result = compare_runs(run_a, run_b, episodes_a, episodes_b)
+
+    # Display results
+    click.echo("=" * 60)
+    click.echo("COMPARISON: {} vs {}".format(run_a_id, run_b_id))
+    click.echo("=" * 60)
+    click.echo()
+
+    # Run A
+    click.echo(f"Run A: {result['run_a']['solver']}")
+    click.echo(f"  Pass rate: {result['run_a']['pass_rate']:.1%} ({result['run_a']['passed']}/{result['run_a']['total']})")
+    click.echo(f"  95% CI: [{result['wilson_ci_a'][0]:.1%}, {result['wilson_ci_a'][1]:.1%}]")
+    click.echo()
+
+    # Run B
+    click.echo(f"Run B: {result['run_b']['solver']}")
+    click.echo(f"  Pass rate: {result['run_b']['pass_rate']:.1%} ({result['run_b']['passed']}/{result['run_b']['total']})")
+    click.echo(f"  95% CI: [{result['wilson_ci_b'][0]:.1%}, {result['wilson_ci_b'][1]:.1%}]")
+    click.echo()
+
+    # McNemar test
+    mcnemar = result['mcnemar']
+    if mcnemar.get('p_value') is not None:
+        click.echo("McNemar's Test (paired comparison):")
+        click.echo(f"  p-value: {mcnemar['p_value']:.4f}")
+        click.echo(f"  Significant: {'Yes' if mcnemar['significant'] else 'No'} (alpha=0.05)")
+        click.echo(f"  A better on {mcnemar['n_a_better']} samples, B better on {mcnemar['n_b_better']}")
+    else:
+        click.echo("McNemar's Test: Not applicable (no common samples)")
+    click.echo()
+
+    # Cost efficiency
+    cost = result['cost_efficiency']
+    click.echo("Cost Efficiency:")
+    click.echo(f"  A: ${cost['run_a_cost_per_sample']:.4f}/sample, ${cost['run_a_cost_per_success']:.4f}/success")
+    click.echo(f"  B: ${cost['run_b_cost_per_sample']:.4f}/sample, ${cost['run_b_cost_per_success']:.4f}/success")
+
+
+@cli.command()
+@click.argument("run_id")
+def analyze(run_id: str):
+    """Analyze a single run with statistics and failure breakdown.
+
+    RUN_ID is the run identifier to analyze.
+    """
+    import json
+    from .compare import wilson_score_interval, analyze_failures
+    from .state import RunSummary
+
+    # Load run
+    run_dir = LOGS_DIR / "runs" / run_id
+    if not run_dir.exists():
+        click.echo(f"Run not found: {run_id}")
+        sys.exit(1)
+
+    # Load summary
+    summary_data = json.loads((run_dir / "summary.json").read_text())
+    summary = RunSummary(**summary_data)
+
+    # Load episodes
+    episodes = _load_episodes(run_dir / "episodes")
+
+    # Calculate Wilson CI
+    lower, upper = wilson_score_interval(summary.passed, summary.total_samples)
+
+    # Analyze failures
+    failure_breakdown = analyze_failures(episodes)
+
+    # Display results
+    click.echo("=" * 60)
+    click.echo(f"ANALYSIS: {run_id}")
+    click.echo("=" * 60)
+    click.echo()
+
+    click.echo(f"Benchmark: {summary.benchmark}")
+    click.echo(f"Solver: {summary.solver}")
+    click.echo()
+
+    click.echo("Results:")
+    click.echo(f"  Pass rate: {summary.pass_rate:.1%} ({summary.passed}/{summary.total_samples})")
+    click.echo(f"  95% CI: [{lower:.1%}, {upper:.1%}]")
+    click.echo()
+
+    click.echo("Cost:")
+    click.echo(f"  Total: ${summary.total_cost_usd:.4f}")
+    click.echo(f"  Per sample: ${summary.total_cost_usd / summary.total_samples:.4f}" if summary.total_samples > 0 else "  Per sample: N/A")
+    click.echo(f"  Per success: ${summary.cost_per_success:.4f}" if summary.passed > 0 else "  Per success: N/A")
+    click.echo()
+
+    click.echo("Failure Breakdown:")
+    total_failures = sum(failure_breakdown.values())
+    if total_failures > 0:
+        for mode, count in sorted(failure_breakdown.items(), key=lambda x: -x[1]):
+            if count > 0:
+                pct = count / total_failures * 100
+                click.echo(f"  {mode}: {count} ({pct:.1f}%)")
+    else:
+        click.echo("  No failures!")
+
+
+def _load_episodes(episodes_dir: Path) -> list[dict]:
+    """Load all episodes from a directory."""
+    import json
+
+    episodes = []
+    if episodes_dir.exists():
+        for ep_file in episodes_dir.glob("*.json"):
+            episodes.append(json.loads(ep_file.read_text()))
+    return episodes
+
+
 def main():
     """Main entry point."""
     cli()

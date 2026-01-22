@@ -1,97 +1,142 @@
-# Test Cases: Phase 1 Inspect Eval Integration
+# Test Cases: Phase 2-3 Implementation
 
-## Unit Tests
+## Phase 2: MindsSolver Tests
 
-### 1. Config Module (`eval/config.py`)
+### Unit Tests
 
-| Test | Input | Expected Output |
-|------|-------|-----------------|
-| Load API key from env | `ANTHROPIC_API_KEY=sk-test` in env | Returns `sk-test` |
-| Load API key from .env file | .env file with key | Key loaded into env |
-| Missing key returns None | No key set | Returns None |
-| Mask key for logging | Full key | Shows `...xxxx` (last 4 chars) |
-| Validate required keys | List of models | Dict of model→bool |
+#### TC-2.1: MindsSolver Initialization
+- **Input**: Default models, custom synthesizer model
+- **Expected**: Solver initializes with correct model list and synthesizer
+- **File**: `tests/test_minds_solver.py::TestMindsSolver::test_initialization`
 
-### 2. Preflight Module (`eval/preflight.py`)
+#### TC-2.2: MindsSolver Metadata
+- **Input**: MindsSolver instance
+- **Expected**: Metadata includes name="minds", models list, synthesizer
+- **File**: `tests/test_minds_solver.py::TestMindsSolver::test_metadata`
 
-| Test | Input | Expected Output |
-|------|-------|-----------------|
-| Detect Docker available | Docker running | `docker_available: True` |
-| Detect Docker missing | No Docker | `docker_available: False` |
-| Check Python version | Python 3.12 | `python_ok: True` |
-| Check Inspect installed | inspect-ai in env | `inspect_ok: True` |
-| Benchmark requirements | `swe_bench` | `requires_docker: True` |
-| Benchmark requirements | `gsm8k` | `requires_docker: False` |
+#### TC-2.3: MindsSolver Registration
+- **Input**: Import eval.solvers
+- **Expected**: "minds" solver is in list_solvers()
+- **File**: `tests/test_solvers.py::TestSolverRegistry::test_minds_solver_registered`
 
-### 3. State Module (`eval/state.py`)
+### Rate Limiter Tests
 
-| Test | Input | Expected Output |
-|------|-------|-----------------|
-| Create EvalState | Default | Phase=IDLE |
-| Serialize to JSON | EvalState | Valid JSON string |
-| Load from JSON | JSON string | EvalState object |
-| Update phase | IDLE→RUNNING | Phase=RUNNING |
-| Track progress | 5/10 complete | `progress: 0.5` |
+#### TC-2.4: Token Bucket Initialization
+- **Input**: RPM=60
+- **Expected**: Bucket starts with 60 tokens
+- **File**: `tests/test_rate_limiter.py::TestTokenBucket::test_initialization`
 
-### 4. Episode Data Model
+#### TC-2.5: Token Acquisition
+- **Input**: Acquire token when bucket has tokens
+- **Expected**: Returns immediately, decrements token count
+- **File**: `tests/test_rate_limiter.py::TestTokenBucket::test_acquire_available`
 
-| Test | Input | Expected Output |
-|------|-------|-----------------|
-| Create Episode | Sample data | Valid Episode |
-| Serialize Episode | Episode object | JSON with all fields |
-| Calculate cost | Token counts | USD amount |
-| Determine failure mode | Error type | Correct enum value |
+#### TC-2.6: Token Refill
+- **Input**: Empty bucket, wait for refill period
+- **Expected**: Bucket refills at correct rate
+- **File**: `tests/test_rate_limiter.py::TestTokenBucket::test_refill`
 
-### 5. Inspect Adapter (`eval/adapters/inspect_adapter.py`)
+#### TC-2.7: Rate Limiter Per-Provider
+- **Input**: Different providers with different limits
+- **Expected**: Each provider tracked independently
+- **File**: `tests/test_rate_limiter.py::TestRateLimiter::test_per_provider`
 
-| Test | Input | Expected Output |
-|------|-------|-----------------|
-| Extract context | EvalSample | Context dict |
-| Extract traces from ToolEvent | ToolEvent | Trace dict |
-| Extract traces from ModelEvent | ModelEvent | Trace dict |
-| Map scores to outcome | Score dict | Outcome with pass/fail |
-| Calculate cost from usage | ModelUsage | Cost in USD |
-| Handle missing events | Empty events list | Empty traces |
+## Phase 3: Statistical Comparison Tests
 
-### 6. Solver Registry
+### Wilson Score Tests
 
-| Test | Input | Expected Output |
-|------|-------|-----------------|
-| Register solver | Solver class | Added to registry |
-| Get solver by name | `"baseline"` | BaselineSolver class |
-| Unknown solver | `"unknown"` | Raises KeyError |
+#### TC-3.1: Wilson CI Normal Case
+- **Input**: passed=75, total=100, confidence=0.95
+- **Expected**: CI approximately (0.66, 0.83)
+- **File**: `tests/test_compare.py::TestWilsonCI::test_normal_case`
+
+#### TC-3.2: Wilson CI Edge Case - All Pass
+- **Input**: passed=100, total=100
+- **Expected**: CI upper bound = 1.0, lower bound < 1.0
+- **File**: `tests/test_compare.py::TestWilsonCI::test_all_pass`
+
+#### TC-3.3: Wilson CI Edge Case - All Fail
+- **Input**: passed=0, total=100
+- **Expected**: CI lower bound = 0.0, upper bound > 0.0
+- **File**: `tests/test_compare.py::TestWilsonCI::test_all_fail`
+
+#### TC-3.4: Wilson CI Small Sample
+- **Input**: passed=2, total=5
+- **Expected**: Wide CI due to small sample
+- **File**: `tests/test_compare.py::TestWilsonCI::test_small_sample`
+
+### McNemar Test Tests
+
+#### TC-3.5: McNemar Significant Difference
+- **Input**: A better than B on many samples
+- **Expected**: p-value < 0.05, significant=True
+- **File**: `tests/test_compare.py::TestMcNemar::test_significant_difference`
+
+#### TC-3.6: McNemar No Difference
+- **Input**: A and B perform similarly
+- **Expected**: p-value > 0.05, significant=False
+- **File**: `tests/test_compare.py::TestMcNemar::test_no_difference`
+
+#### TC-3.7: McNemar Edge Case - Identical
+- **Input**: A and B have identical results
+- **Expected**: p-value = 1.0
+- **File**: `tests/test_compare.py::TestMcNemar::test_identical`
+
+### Failure Taxonomy Tests
+
+#### TC-3.8: Failure Classification - Wrong Answer
+- **Input**: Sample with incorrect output
+- **Expected**: failure_mode = "wrong_answer"
+- **File**: `tests/test_compare.py::TestFailureTaxonomy::test_wrong_answer`
+
+#### TC-3.9: Failure Classification - Timeout
+- **Input**: Sample with timeout error
+- **Expected**: failure_mode = "timeout"
+- **File**: `tests/test_compare.py::TestFailureTaxonomy::test_timeout`
+
+### CLI Tests
+
+#### TC-3.10: Compare Command Output
+- **Input**: Two valid run IDs
+- **Expected**: Shows pass rates, Wilson CI, McNemar p-value
+- **File**: `tests/test_cli.py::TestCompareCommand::test_compare_output`
+
+#### TC-3.11: Analyze Command Output
+- **Input**: Valid run ID
+- **Expected**: Shows pass rate, CI, failure breakdown
+- **File**: `tests/test_cli.py::TestAnalyzeCommand::test_analyze_output`
+
+#### TC-3.12: Compare Command - Missing Run
+- **Input**: Non-existent run ID
+- **Expected**: Error message, exit code 1
+- **File**: `tests/test_cli.py::TestCompareCommand::test_missing_run`
 
 ## Integration Tests
 
-### 7. CLI Commands
+### IT-1: MindsSolver with Mock Models
+- **Setup**: Mock model responses for all 5 models
+- **Action**: Run MindsSolver.solve() with sample task state
+- **Expected**: Returns synthesized answer combining all responses
+- **File**: `tests/test_integration.py::test_minds_solver_mock`
 
-| Test | Command | Expected Behavior |
-|------|---------|-------------------|
-| Preflight check | `socrates-eval preflight` | Shows environment status |
-| Run with missing key | `socrates-eval run gsm8k` (no key) | Error with helpful message |
-| Run with valid setup | `socrates-eval run gsm8k --samples 1` | Completes, creates logs |
-| Status check | `socrates-eval status` | Shows current state |
-| View results | `socrates-eval results` | Shows run summary |
+### IT-2: End-to-End Compare Flow
+- **Setup**: Two pre-existing runs with episode data
+- **Action**: Run `socrates-eval compare <run_a> <run_b>`
+- **Expected**: Complete comparison report with statistics
+- **File**: `tests/test_integration.py::test_compare_flow`
 
-### 8. End-to-End: GSM8K Smoke Test
+## Smoke Tests (Manual/CI)
 
-| Test | Steps | Expected Outcome |
-|------|-------|------------------|
-| Full pipeline | 1. Set API key<br>2. Run GSM8K (2 samples)<br>3. Check results | Episodes created with traces |
+### ST-1: MindsSolver on GSM8K
+```bash
+socrates-eval run gsm8k --solver minds --samples 3
+```
+- **Expected**: Completes successfully, shows pass rate and cost
 
-## Verification Criteria
-
-### Phase 1 Complete When:
-
-1. [ ] `socrates-eval preflight` runs and reports environment status
-2. [ ] `socrates-eval run gsm8k --solver baseline --samples 2` completes
-3. [ ] `eval_logs/runs/{run_id}/` contains:
-   - `config.json` with run configuration
-   - `summary.json` with pass rate and cost
-   - `episodes/` with per-sample JSON files
-4. [ ] Episodes contain:
-   - `context` with input and target
-   - `traces` array with model/tool events
-   - `outcome` with pass/fail and score
-   - `cost` with token counts and USD
-5. [ ] API keys are never logged in full
+### ST-2: Baseline vs Minds Comparison
+```bash
+socrates-eval run gsm8k --solver baseline --samples 5
+socrates-eval run gsm8k --solver minds --samples 5
+socrates-eval compare <baseline_run> <minds_run>
+```
+- **Expected**: Shows comparison with statistical analysis

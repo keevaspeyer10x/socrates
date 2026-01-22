@@ -1,7 +1,7 @@
 """Baseline solver - standard single-model evaluation."""
 
 from typing import Any
-from . import Solver
+from .base import Solver
 
 
 class BaselineSolver(Solver):

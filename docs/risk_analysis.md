@@ -1,70 +1,101 @@
-# Risk Analysis: Phase 1 Inspect Eval Integration
+# Risk Analysis: Phase 2-3 Implementation
 
-## Risk Assessment Matrix
+## Risk Assessment
 
-| Risk | Likelihood | Impact | Mitigation |
-|------|------------|--------|------------|
-| API key exposure in logs | Medium | High | Never log full keys, mask in output |
-| Inspect API version breaks | Medium | Medium | Pin version, create adapter layer |
-| Docker not available | High | Low | Graceful degradation to non-Docker benchmarks |
-| Cost overrun during eval | Medium | Medium | Add `--max-cost` flag, warn before expensive runs |
-| Rate limiting from providers | High | Low | Per-provider semaphores, backoff |
+### High Impact Risks
 
-## Detailed Risk Analysis
+#### 1. API Cost Overrun
+- **Risk**: MindsSolver queries 5 models per sample, multiplying costs 5x+
+- **Likelihood**: Medium (if not careful with sample limits)
+- **Impact**: High (budget is ~$92 remaining)
+- **Mitigation**:
+  - Default to small sample sizes (--samples 3-5 for testing)
+  - Add cost estimation before run (`--dry-run` flag)
+  - Track cumulative cost in EvalState
+  - Add cost limit parameter to abort if exceeded
 
-### 1. Security: API Key Handling
-**Risk**: API keys could be logged or exposed in error messages
+#### 2. Rate Limiting Failures
+- **Risk**: Different providers have different rate limits; hitting limits causes failures
+- **Likelihood**: High (especially with parallel queries)
+- **Impact**: Medium (failed samples, wasted cost)
+- **Mitigation**:
+  - Conservative default RPM (30 requests/minute per provider)
+  - Exponential backoff on 429 errors
+  - Per-provider configuration in config
 
-**Mitigation**:
-- Load keys from `.env` file (not command line args)
-- Mask keys in all log output (show only last 4 chars)
-- Never persist keys in state files
-- Add `.env` to `.gitignore`
+### Medium Impact Risks
 
-### 2. Dependency: Inspect AI Version Coupling
-**Risk**: Inspect AI is actively developed; breaking changes possible
+#### 3. Model API Incompatibilities
+- **Risk**: Inspect's `get_model()` may not support all multiminds models
+- **Likelihood**: Medium (Inspect supports major providers)
+- **Impact**: Medium (may need to use httpx directly for some models)
+- **Mitigation**:
+  - Start with well-supported models (Claude, GPT, Gemini)
+  - Fall back to direct API calls if needed
+  - Test each model individually before full integration
 
-**Mitigation**:
-- Create `eval/adapters/inspect_adapter.py` isolation layer
-- Pin inspect-ai version in pyproject.toml
-- Test against specific versions before upgrade
-- Document supported versions
+#### 4. Synthesis Quality Variance
+- **Risk**: Claude synthesizer may not always produce best answer from diverse responses
+- **Likelihood**: Medium
+- **Impact**: Low-Medium (affects benchmark scores but data is logged)
+- **Mitigation**:
+  - Log all individual model responses in traces
+  - Allow analysis of which model was "right" even if synthesis failed
+  - Iterate on synthesis prompt based on results
 
-### 3. Infrastructure: Docker Availability
-**Risk**: Users may not have Docker installed
+### Low Impact Risks
 
-**Mitigation**:
-- Preflight check detects Docker before run
-- Clear error message with install instructions
-- Non-Docker benchmarks (GSM8K, MMLU) always available
-- Document which benchmarks need Docker
+#### 5. Statistical Test Edge Cases
+- **Risk**: Wilson CI undefined for 0/n or n/n pass rates; McNemar requires paired samples
+- **Likelihood**: Low (edge cases)
+- **Impact**: Low (just need proper handling)
+- **Mitigation**:
+  - Handle edge cases with appropriate defaults/warnings
+  - Require matching sample IDs for McNemar comparison
 
-### 4. Cost: Unexpected API Spend
-**Risk**: Running large evaluations could incur significant costs
+#### 6. Async Complexity
+- **Risk**: Race conditions or deadlocks in parallel model queries
+- **Likelihood**: Low (asyncio is well-understood)
+- **Impact**: Low (would show as test failures)
+- **Mitigation**:
+  - Use asyncio.gather with return_exceptions=True
+  - Add timeouts to all async operations
+  - Comprehensive async tests
 
-**Mitigation**:
-- Show estimated cost before run starts
-- Add `--max-cost` flag to abort if exceeded
-- Default to small sample sizes (5-10) for testing
-- Track actual cost in episode logs
+## Security Considerations
 
-### 5. Reliability: Provider Rate Limits
-**Risk**: Multi-model queries may hit rate limits
+- **API Keys**: Already handled by existing APIKeyManager + SOPS integration
+- **No new attack surface**: This is evaluation code, not user-facing
+- **Data handling**: Benchmark data is public; no PII concerns
 
-**Mitigation**:
-- Per-provider semaphores (different limits)
-- Exponential backoff on 429 errors
-- Log rate limit events for debugging
-- Allow `--provider` flag to limit to one provider
+## Rollback Plan
 
-## Impact on Plan
+If implementation fails:
+1. MindsSolver is optional - baseline solver remains functional
+2. Statistical functions are isolated in compare.py
+3. CLI commands can be disabled without affecting core functionality
+4. No database migrations or state format changes required
 
-No changes to plan required. Mitigations are already incorporated:
-- Adapter layer in project structure
-- Preflight command in Phase 1
-- Cost tracking in episode format
+## Dependencies
 
-## Approval
+| Dependency | Version | Risk |
+|------------|---------|------|
+| inspect-ai | >=0.3.150 | Low - already in use |
+| scipy | New | Low - well-maintained, for statistical tests |
+| asyncio | stdlib | None |
 
-**Risk Level**: LOW-MEDIUM
-**Recommendation**: Proceed with implementation
+## Estimated Cost
+
+For testing:
+- MindsSolver smoke test (5 samples x 5 models): ~$0.50-1.00
+- Full GSM8K comparison (100 samples): ~$10-15
+
+Total Phase 2-3 testing budget: ~$15-20
+
+## Go/No-Go Checklist
+
+- [x] Budget sufficient for testing (~$92 remaining)
+- [x] API keys configured for all 5 models
+- [x] No breaking changes to existing functionality
+- [x] Rollback path exists
+- [x] Security review: no new attack vectors
