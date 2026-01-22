@@ -22,7 +22,8 @@ class TestAPIKeyManager:
         monkeypatch.delenv("ANTHROPIC_API_KEY", raising=False)
 
         from eval.config import APIKeyManager
-        manager = APIKeyManager()
+        # Use non-existent SOPS file to avoid loading from minds config
+        manager = APIKeyManager(sops_file=Path("/nonexistent/secrets.yaml"))
 
         assert manager.get_key("anthropic") is None
 
@@ -41,7 +42,8 @@ class TestAPIKeyManager:
         monkeypatch.delenv("OPENAI_API_KEY", raising=False)
 
         from eval.config import APIKeyManager
-        manager = APIKeyManager()
+        # Use non-existent SOPS file to avoid loading from minds config
+        manager = APIKeyManager(sops_file=Path("/nonexistent/secrets.yaml"))
 
         result = manager.validate_for_models([
             "anthropic/claude-sonnet-4-20250514",
@@ -57,7 +59,8 @@ class TestAPIKeyManager:
         monkeypatch.delenv("OPENAI_API_KEY", raising=False)
 
         from eval.config import APIKeyManager
-        manager = APIKeyManager()
+        # Use non-existent SOPS file to avoid loading from minds config
+        manager = APIKeyManager(sops_file=Path("/nonexistent/secrets.yaml"))
 
         missing = manager.get_missing_keys([
             "anthropic/claude-sonnet-4-20250514",

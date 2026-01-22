@@ -84,6 +84,37 @@ class TestInspectAdapter:
         assert outcome["passed"] is False
         assert outcome["failure_mode"] == "wrong_answer"
 
+    def test_map_letter_grade_correct(self):
+        """Should map letter grade 'C' (Correct) to passed=True."""
+        from eval.adapters.inspect_adapter import InspectAdapter
+
+        # GSM8K uses 'match' scorer with C/I/P letter grades
+        scores = {
+            "match": MagicMock(value="C", answer="18"),
+        }
+
+        adapter = InspectAdapter()
+        outcome = adapter.map_outcome(scores, error=None)
+
+        assert outcome["passed"] is True
+        assert outcome["score"] == 1.0
+        assert outcome["failure_mode"] is None
+
+    def test_map_letter_grade_incorrect(self):
+        """Should map letter grade 'I' (Incorrect) to passed=False."""
+        from eval.adapters.inspect_adapter import InspectAdapter
+
+        scores = {
+            "match": MagicMock(value="I", answer="wrong"),
+        }
+
+        adapter = InspectAdapter()
+        outcome = adapter.map_outcome(scores, error=None)
+
+        assert outcome["passed"] is False
+        assert outcome["score"] == 0.0
+        assert outcome["failure_mode"] == "wrong_answer"
+
     def test_map_error_outcome(self):
         """Should map errors to outcome with failure mode."""
         from eval.adapters.inspect_adapter import InspectAdapter

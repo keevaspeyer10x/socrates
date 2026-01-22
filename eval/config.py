@@ -1,8 +1,13 @@
 """API key management and benchmark requirements."""
 
 import os
+import subprocess
 from pathlib import Path
 from typing import Optional
+
+
+# Default SOPS secrets file location (symlinked from minds CLI)
+DEFAULT_SOPS_FILE = Path.home() / ".config" / "minds" / "secrets.enc.yaml"
 
 
 def mask_api_key(key: Optional[str]) -> str:
@@ -26,10 +31,65 @@ class APIKeyManager:
         "deepseek": "DEEPSEEK_API_KEY",
     }
 
-    def __init__(self, env_file: Optional[Path] = None):
-        """Initialize with optional .env file path."""
+    # Map SOPS key names to environment variable names
+    SOPS_KEY_MAP = {
+        "anthropic_api_key": "ANTHROPIC_API_KEY",
+        "openai_api_key": "OPENAI_API_KEY",
+        "gemini_api_key": "GOOGLE_API_KEY",
+        "xai_api_key": "XAI_API_KEY",
+        "deepseek_api_key": "DEEPSEEK_API_KEY",
+    }
+
+    def __init__(self, env_file: Optional[Path] = None, sops_file: Optional[Path] = None):
+        """Initialize with optional .env file path and SOPS secrets file."""
         self._env_file = env_file or Path(".env")
+        self._sops_file = sops_file or DEFAULT_SOPS_FILE
+        self._load_secrets()
+
+    def _load_secrets(self):
+        """Load secrets from SOPS file (preferred) or .env file."""
+        # Try SOPS first (shared with minds CLI)
+        if self._load_sops():
+            return
+        # Fall back to .env file
         self._load_dotenv()
+
+    def _load_sops(self) -> bool:
+        """Load secrets from SOPS-encrypted file. Returns True if successful."""
+        if not self._sops_file.exists():
+            return False
+
+        try:
+            result = subprocess.run(
+                ["sops", "-d", str(self._sops_file)],
+                capture_output=True,
+                text=True,
+                timeout=10,
+            )
+            if result.returncode != 0:
+                return False
+
+            # Parse YAML output (simple key: value format)
+            for line in result.stdout.splitlines():
+                line = line.strip()
+                if not line or line.startswith("#") or ":" not in line:
+                    continue
+                if line.startswith("sops:"):
+                    break  # Stop at SOPS metadata section
+
+                key, value = line.split(":", 1)
+                key = key.strip()
+                value = value.strip()
+
+                # Map SOPS key names to env var names
+                env_var = self.SOPS_KEY_MAP.get(key)
+                if env_var and env_var not in os.environ:
+                    os.environ[env_var] = value
+
+            return True
+        except (subprocess.TimeoutExpired, FileNotFoundError):
+            # sops not installed or timed out
+            return False
 
     def _load_dotenv(self):
         """Load .env file if present (don't override existing env vars)."""
