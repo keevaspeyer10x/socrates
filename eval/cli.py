@@ -255,7 +255,10 @@ def _get_benchmark_task(benchmark: str):
         return task
     elif benchmark == "mbpp":
         from inspect_evals.mbpp import mbpp
-        return mbpp(sandbox="local")  # Use local sandbox (no Docker)
+        from inspect_ai.util._sandbox.environment import SandboxEnvironmentSpec
+        task = mbpp()  # Uses default temperature=0.5
+        task.sandbox = SandboxEnvironmentSpec(type="local")  # Use local sandbox (no Docker)
+        return task
     else:
         raise ValueError(f"Unknown benchmark: {benchmark}")
 
