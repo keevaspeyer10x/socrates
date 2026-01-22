@@ -151,6 +151,8 @@ class BenchmarkRequirements:
         "gaia_l3",
         "cybench",
         "terminal_bench",
+        "bigcodebench",
+        "bigcodebench_hard",
     }
 
     # Benchmarks that work without Docker

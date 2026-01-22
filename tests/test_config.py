@@ -100,3 +100,10 @@ class TestBenchmarkRequirements:
         from eval.config import BenchmarkRequirements
 
         assert not BenchmarkRequirements.requires_docker("mbpp")
+
+    def test_bigcodebench_requires_docker(self):
+        """BigCodeBench should require Docker (for Python library dependencies)."""
+        from eval.config import BenchmarkRequirements
+
+        assert BenchmarkRequirements.requires_docker("bigcodebench")
+        assert BenchmarkRequirements.requires_docker("bigcodebench_hard")

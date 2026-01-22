@@ -259,6 +259,47 @@ def _get_benchmark_task(benchmark: str):
         task = mbpp()  # Uses default temperature=0.5
         task.sandbox = SandboxEnvironmentSpec(type="local")  # Use local sandbox (no Docker)
         return task
+    elif benchmark == "bigcodebench":
+        from inspect_evals.bigcodebench import bigcodebench
+        return bigcodebench()  # Uses Docker sandbox by default
+    elif benchmark == "bigcodebench_hard":
+        # BigCodeBench-Hard requires loading from bigcode/bigcodebench-hard dataset
+        # Since inspect_evals bigcodebench() loads from bigcode/bigcodebench,
+        # we need to create a custom task that loads from the hard dataset
+        from inspect_ai import Task
+        from inspect_ai.dataset import Sample
+        from inspect_evals.bigcodebench.bigcodebench import (
+            get_record_to_sample, verify, INSTRUCTION_PROMPT
+        )
+        from inspect_evals.utils.huggingface import load_dataset
+        from inspect_evals.utils import get_images_from_compose, force_build_or_pull_docker_image, DockerHandling
+        from pathlib import Path
+        import inspect_evals.bigcodebench as bigcodebench_module
+
+        # Load from the hard dataset
+        bigcode_hard = load_dataset("bigcode/bigcodebench-hard", split="v0.1.2")
+        record_to_sample = get_record_to_sample(INSTRUCTION_PROMPT)
+        dataset = [record_to_sample(record) for record in bigcode_hard]
+
+        # Use same Docker setup as regular bigcodebench
+        module_dir = Path(bigcodebench_module.__file__).parent
+        compose_file = module_dir / "compose.yaml"
+        image_name = get_images_from_compose(compose_file)
+        dockerfile_fp = module_dir / "Dockerfile"
+
+        assert len(image_name) == 1, "Expected only 1 service"
+        force_build_or_pull_docker_image(
+            image=image_name[0],
+            dockerfile_path=dockerfile_fp,
+            docker_handling=DockerHandling.DEFAULT,
+        )
+
+        return Task(
+            dataset=dataset,
+            scorer=verify(),
+            sandbox=("docker", str(compose_file)),
+            version="1.0.0",
+        )
     else:
         raise ValueError(f"Unknown benchmark: {benchmark}")
 
@@ -642,6 +683,95 @@ def lessons(candidates: bool, approve: Optional[str], reject: Optional[str], sta
         if lesson.application_count > 0:
             click.echo(f"  Applied: {lesson.application_count} time(s), {lesson.success_rate:.0%} success")
         click.echo()
+
+
+# =============================================================================
+# Fail Set Commands (Phase 5 - Issue #5)
+# =============================================================================
+
+@cli.command("analyze-failures")
+@click.argument("run_ids", nargs=-1, required=True)
+@click.option("--output", "-o", type=str, required=True, help="Output JSON file for fail set")
+@click.option("--intersect", is_flag=True, help="Only include samples that failed in ALL runs")
+def analyze_failures(run_ids: tuple[str, ...], output: str, intersect: bool):
+    """Extract failed samples from evaluation runs.
+
+    RUN_IDS are one or more run identifiers to analyze.
+
+    Use --intersect to find problems that failed across ALL specified runs
+    (useful for finding the "hardest" problems that multiple models fail).
+
+    Example:
+        socrates-eval analyze-failures run1 --output fail_set.json
+        socrates-eval analyze-failures run1 run2 run3 --intersect --output hard_failures.json
+    """
+    import json
+
+    all_failed_sets: list[set[int]] = []
+    source_runs: list[str] = []
+
+    for run_id in run_ids:
+        run_dir = LOGS_DIR / "runs" / run_id
+        if not run_dir.exists():
+            click.echo(f"Run not found: {run_id}")
+            sys.exit(1)
+
+        episodes = _load_episodes(run_dir / "episodes")
+        if not episodes:
+            click.echo(f"No episodes found in run: {run_id}")
+            sys.exit(1)
+
+        # Extract failed sample IDs
+        failed_ids = set()
+        for ep in episodes:
+            outcome = ep.get("outcome", {})
+            if not outcome.get("passed", False):
+                sample_id = ep.get("sample_id")
+                if sample_id is not None:
+                    # Handle both int and string sample IDs
+                    if isinstance(sample_id, int):
+                        failed_ids.add(sample_id)
+                    else:
+                        try:
+                            failed_ids.add(int(sample_id))
+                        except (ValueError, TypeError):
+                            # Keep as-is if not convertible to int
+                            failed_ids.add(sample_id)
+
+        all_failed_sets.append(failed_ids)
+        source_runs.append(run_id)
+        click.echo(f"Run {run_id}: {len(failed_ids)} failures out of {len(episodes)} samples")
+
+    # Compute final fail set
+    if intersect and len(all_failed_sets) > 1:
+        # Intersection: samples that failed in ALL runs
+        final_failed = all_failed_sets[0]
+        for failed_set in all_failed_sets[1:]:
+            final_failed = final_failed.intersection(failed_set)
+        mode = "intersect"
+        click.echo(f"\nIntersection of failures across {len(run_ids)} runs: {len(final_failed)} samples")
+    else:
+        # Union: all unique failures (or single run)
+        final_failed = set()
+        for failed_set in all_failed_sets:
+            final_failed = final_failed.union(failed_set)
+        mode = "union" if len(run_ids) > 1 else "single"
+
+    # Create fail set JSON
+    fail_set = {
+        "source_runs": source_runs,
+        "mode": mode,
+        "sample_ids": sorted(list(final_failed)),  # Sort for deterministic output
+    }
+
+    # Write output
+    output_path = Path(output)
+    output_path.write_text(json.dumps(fail_set, indent=2))
+    click.echo(f"\nFail set written to: {output}")
+    click.echo(f"Total failed samples: {len(final_failed)}")
+
+    if final_failed:
+        click.echo(f"\nUse with: socrates-eval run <benchmark> --sample-ids {output}")
 
 
 def main():

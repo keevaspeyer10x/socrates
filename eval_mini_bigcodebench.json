@@ -1,0 +1,31 @@
+{
+  "description": "Curated 20-problem subset from BigCodeBench-Hard for rapid iteration",
+  "source": "bigcode/bigcodebench-hard v0.1.2",
+  "selection_criteria": [
+    "Official BigCodeBench-Hard problems",
+    "Diverse library coverage (numpy, pandas, scipy, sklearn, etc.)",
+    "Mix of task types (data processing, ML, visualization, web)"
+  ],
+  "sample_ids": [
+    13,
+    15,
+    17,
+    19,
+    34,
+    82,
+    89,
+    92,
+    93,
+    99,
+    100,
+    101,
+    108,
+    120,
+    123,
+    129,
+    139,
+    147,
+    161,
+    162
+  ]
+}
