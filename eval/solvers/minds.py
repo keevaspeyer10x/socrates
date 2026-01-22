@@ -44,10 +44,15 @@ SYNTHESIS_PROMPT = """You are synthesizing responses from multiple AI models to 
 {responses}
 
 ## Task:
-Based on the above responses, provide a final synthesized answer that:
-1. Identifies the consensus across models
-2. Resolves any disagreements by evaluating the reasoning
-3. Produces the most accurate and complete answer
+Based on the above responses:
+1. Identify the consensus across models
+2. Resolve any disagreements by evaluating the reasoning
+3. Extract the most accurate final answer
+
+IMPORTANT: You MUST end your response with a line in exactly this format:
+ANSWER: <your final answer>
+
+For example: "ANSWER: 42" or "ANSWER: The capital is Paris"
 
 ## Your synthesized answer:"""
 

@@ -18,7 +18,7 @@ class BaselineSolver(Solver):
 
     def __init__(
         self,
-        model: str = "anthropic/claude-sonnet-4-20250514",
+        model: str = "anthropic/claude-opus-4-5-20251101",
         inject_lessons: bool = False,
         lessons_dir: Optional[Path] = None,
         max_lessons: int = 3
@@ -26,7 +26,7 @@ class BaselineSolver(Solver):
         """Initialize with target model.
 
         Args:
-            model: Model identifier (e.g., "anthropic/claude-sonnet-4-20250514")
+            model: Model identifier (e.g., "anthropic/claude-opus-4-5-20251101")
             inject_lessons: Whether to inject relevant lessons into prompts
             lessons_dir: Directory containing lessons (default: eval_logs/lessons)
             max_lessons: Maximum lessons to inject per problem
