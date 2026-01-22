@@ -91,31 +91,79 @@ socrates-eval run gsm8k --solver baseline --samples 10
 ### CLI Commands
 
 ```bash
-socrates-eval preflight    # Check environment readiness
-socrates-eval run <bench>  # Run evaluation
-socrates-eval status       # Show current state
-socrates-eval results      # View run results
-socrates-eval solvers      # List available solvers
+socrates-eval preflight       # Check environment readiness
+socrates-eval run <bench>     # Run evaluation
+socrates-eval status          # Show current state
+socrates-eval results         # View run results
+socrates-eval solvers         # List available solvers
+socrates-eval compare A B     # Compare two runs statistically
+socrates-eval analyze <run>   # Deep analysis with failure breakdown
+socrates-eval learn <run>     # Extract lessons from a run
+socrates-eval lessons         # View and manage lessons
 ```
 
-See [docs/plan.md](docs/plan.md) for the full implementation plan.
+### Learning System
+
+The evaluation framework includes a learning pipeline that extracts lessons from evaluation runs:
+
+```bash
+# After running an evaluation
+socrates-eval learn 20260122_123456_gsm8k_baseline
+
+# View extracted candidate lessons
+socrates-eval lessons --candidates
+
+# Approve a lesson for future use
+socrates-eval lessons --approve lesson_20260122_wrong_answer
+
+# View learning statistics
+socrates-eval lessons --stats
+```
+
+### Custom Solvers
+
+You can create custom solvers by extending the `Solver` base class:
+
+```python
+# my_solver.py
+from eval.solvers.base import Solver
+from typing import Any
+
+class MyCustomSolver(Solver):
+    name = "my_custom"
+
+    async def solve(self, state: Any, generate: Any) -> Any:
+        # Your custom logic here
+        return await generate(state)
+```
+
+Load it with:
+```bash
+socrates-eval run gsm8k --solver my_custom --solver-path ./my_solver.py
+```
 
 ## Status
 
-**Phase 1 Complete** - Evaluation framework core infrastructure.
+**Phases 1-5 Complete** - Full evaluation framework with learning pipeline.
+
+- Phase 1: Core infrastructure (preflight, state, logging, baseline solver)
+- Phase 2: MindsSolver for multi-model collaboration with fallbacks
+- Phase 3: Statistical comparison (Wilson CI, McNemar test)
+- Phase 4: Learning pipeline (lesson extraction, approval workflow)
+- Phase 5: Custom solver support (load from file or module)
+
+### What's Implemented
 
 - Preflight checks (Docker, API keys, Python version)
-- State persistence and episode logging
+- State persistence and episode logging (4-tuple format)
 - Inspect AI adapter for log extraction
-- Baseline solver implementation
-- CLI with run/status/results commands
-
-### Next Steps
-
-1. Phase 2: Implement MindsSolver for multi-model collaboration
-2. Phase 3: Statistical comparison (Wilson CI, McNemar test)
-3. Phase 4: Learning pipeline for lesson extraction
-4. Phase 5: Custom solver support
+- Baseline and MindsSolver implementations
+- Model fallback configuration
+- Rate limiting per provider
+- Wilson confidence intervals and McNemar's test
+- Learning pipeline with candidate/approved workflow
+- Custom solver loading from Python files
+- CLI with full command set
 
 ## Research Budget
 

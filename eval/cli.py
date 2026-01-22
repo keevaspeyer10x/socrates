@@ -95,21 +95,23 @@ def run(benchmark: str, solver: str, model: str, samples: Optional[int]):
     state.start_run(run_id, benchmark, solver, samples or 0)
     state.save(STATE_FILE)
 
-    # Run evaluation
+    # Run evaluation with try...finally for state cleanup (LEARNINGS recommendation)
     try:
         _run_evaluation(benchmark, solver, model, samples, run_id)
+        state.finish_run()
+        state.save(STATE_FILE)
+
+        click.echo()
+        click.echo(f"Evaluation complete. View results with: socrates-eval results {run_id}")
+        click.echo(f"Extract lessons with: socrates-eval learn {run_id}")
     except Exception as e:
         click.echo(f"Error: {e}")
-        state.phase = "IDLE"
-        state.save(STATE_FILE)
         sys.exit(1)
-
-    # Update state
-    state.finish_run()
-    state.save(STATE_FILE)
-
-    click.echo()
-    click.echo(f"Evaluation complete. View results with: socrates-eval results {run_id}")
+    finally:
+        # Always reset state on exit to prevent stuck state
+        if state.phase != "IDLE":
+            state.phase = "IDLE"
+            state.save(STATE_FILE)
 
 
 def _run_evaluation(benchmark: str, solver: str, model: str, samples: Optional[int], run_id: str):
@@ -410,6 +412,161 @@ def _load_episodes(episodes_dir: Path) -> list[dict]:
         for ep_file in episodes_dir.glob("*.json"):
             episodes.append(json.loads(ep_file.read_text()))
     return episodes
+
+
+# =============================================================================
+# Learning Commands (Phase 4)
+# =============================================================================
+
+@cli.command()
+@click.argument("run_id")
+def learn(run_id: str):
+    """Extract lessons from an evaluation run.
+
+    RUN_ID is the run identifier to extract lessons from.
+    """
+    import json
+    from .learning import LearningEngine
+
+    # Load run
+    run_dir = LOGS_DIR / "runs" / run_id
+    if not run_dir.exists():
+        click.echo(f"Run not found: {run_id}")
+        sys.exit(1)
+
+    # Load summary
+    summary_file = run_dir / "summary.json"
+    if not summary_file.exists():
+        click.echo(f"No summary found for run: {run_id}")
+        sys.exit(1)
+
+    summary = json.loads(summary_file.read_text())
+
+    # Load episodes
+    episodes = _load_episodes(run_dir / "episodes")
+    if not episodes:
+        click.echo("No episodes found to analyze.")
+        sys.exit(1)
+
+    click.echo(f"Analyzing {len(episodes)} episodes from run {run_id}...")
+    click.echo()
+
+    # Extract lessons
+    engine = LearningEngine(lessons_dir=LOGS_DIR / "lessons")
+    candidates = engine.extract_lessons_from_episodes(
+        episodes,
+        run_id,
+        summary["benchmark"],
+        summary["solver"]
+    )
+
+    if not candidates:
+        click.echo("No new lessons extracted (no patterns found or all duplicates).")
+        return
+
+    click.echo(f"Extracted {len(candidates)} candidate lesson(s):")
+    click.echo()
+    for i, lesson in enumerate(candidates, 1):
+        click.echo(f"{i}. [{lesson.confidence:.0%} confidence] {lesson.what}")
+        click.echo(f"   Why: {lesson.why}")
+        click.echo(f"   Triggers: {', '.join(lesson.triggers)}")
+        click.echo()
+
+    click.echo("Review candidates with: socrates-eval lessons --candidates")
+    click.echo("Approve a lesson with:  socrates-eval lessons --approve <lesson_id>")
+
+
+@cli.command()
+@click.option("--candidates", is_flag=True, help="Show candidate lessons pending approval")
+@click.option("--approve", type=str, help="Approve a candidate lesson by ID")
+@click.option("--reject", type=str, help="Reject a candidate lesson by ID")
+@click.option("--stats", is_flag=True, help="Show learning statistics")
+def lessons(candidates: bool, approve: Optional[str], reject: Optional[str], stats: bool):
+    """View and manage lessons.
+
+    Shows approved lessons by default. Use flags to manage candidates.
+    """
+    from .learning import LearningEngine
+
+    engine = LearningEngine(lessons_dir=LOGS_DIR / "lessons")
+
+    # Handle approval
+    if approve:
+        lesson = engine.approve_candidate(approve)
+        if lesson:
+            click.echo(f"Approved lesson: {lesson.lesson_id}")
+            click.echo(f"  What: {lesson.what}")
+        else:
+            click.echo(f"Candidate not found: {approve}")
+            sys.exit(1)
+        return
+
+    # Handle rejection
+    if reject:
+        if engine.reject_candidate(reject):
+            click.echo(f"Rejected and deleted: {reject}")
+        else:
+            click.echo(f"Candidate not found: {reject}")
+            sys.exit(1)
+        return
+
+    # Show statistics
+    if stats:
+        stat = engine.get_statistics()
+        click.echo("Learning System Statistics:")
+        click.echo(f"  Total lessons: {stat['total_lessons']}")
+        click.echo(f"  Pending candidates: {stat['total_candidates']}")
+        click.echo(f"  Approved: {stat['approved_lessons']}")
+        click.echo(f"  Embedded: {stat['embedded_lessons']}")
+        click.echo(f"  Archived: {stat['archived_lessons']}")
+        click.echo()
+        click.echo(f"  Avg confidence: {stat['avg_confidence']:.1%}")
+        click.echo(f"  Avg success rate: {stat['avg_success_rate']:.1%}")
+        click.echo(f"  Total applications: {stat['total_applications']}")
+        return
+
+    # Show candidates
+    if candidates:
+        candidate_list = engine.load_candidates()
+        if not candidate_list:
+            click.echo("No candidate lessons pending approval.")
+            return
+
+        click.echo(f"Candidate lessons ({len(candidate_list)} pending):")
+        click.echo()
+        for lesson in candidate_list:
+            click.echo(f"ID: {lesson.lesson_id}")
+            click.echo(f"  What: {lesson.what}")
+            click.echo(f"  Why: {lesson.why}")
+            click.echo(f"  Confidence: {lesson.confidence:.0%}")
+            click.echo(f"  Triggers: {', '.join(lesson.triggers)}")
+            click.echo(f"  Evidence: {len(lesson.episode_ids)} episode(s)")
+            click.echo()
+        return
+
+    # Show approved lessons (default)
+    lesson_list = engine.load_lessons()
+    if not lesson_list:
+        click.echo("No approved lessons yet.")
+        click.echo("Run 'socrates-eval learn <run_id>' after an evaluation to extract lessons.")
+        return
+
+    click.echo(f"Approved lessons ({len(lesson_list)}):")
+    click.echo()
+    for lesson in lesson_list:
+        status_marker = ""
+        if lesson.status == "embedded":
+            status_marker = " [EMBEDDED]"
+        elif lesson.status == "archived":
+            status_marker = " [ARCHIVED]"
+
+        click.echo(f"ID: {lesson.lesson_id}{status_marker}")
+        click.echo(f"  What: {lesson.what}")
+        click.echo(f"  Why: {lesson.why}")
+        click.echo(f"  Confidence: {lesson.confidence:.0%}")
+        if lesson.application_count > 0:
+            click.echo(f"  Applied: {lesson.application_count} time(s), {lesson.success_rate:.0%} success")
+        click.echo()
 
 
 def main():
