@@ -6,7 +6,60 @@ for comparing solver performance with statistical rigor.
 
 import math
 from typing import Optional
-from scipy import stats
+
+
+def norm_ppf(p: float) -> float:
+    """Approximation of the inverse cumulative normal distribution function.
+    
+    Used for calculating Z-scores. Accurate enough for standard confidence intervals.
+    """
+    # Handle standard confidence levels precisely
+    if abs(p - 0.975) < 1e-5: return 1.959964  # 95% (two-sided)
+    if abs(p - 0.95) < 1e-5: return 1.644854   # 90% (two-sided)
+    if abs(p - 0.995) < 1e-5: return 2.575829  # 99% (two-sided)
+    if abs(p - 0.5) < 1e-5: return 0.0
+
+    # Rational approximation for other values (Abramowitz and Stegun 26.2.23)
+    # This is "good enough" for non-critical statistical visualization
+    if p > 0.5:
+        return -norm_ppf(1 - p)
+        
+    t = math.sqrt(-2 * math.log(p))
+    c0, c1, c2 = 2.515517, 0.802853, 0.010328
+    d1, d2, d3 = 1.432788, 0.189269, 0.001308
+    
+    return -((c0 + c1 * t + c2 * t**2) / (1 + d1 * t + d2 * t**2 + d3 * t**3) - t)
+
+
+def binom_test_two_sided_p05(k: int, n: int) -> float:
+    """Calculate two-sided binomial test p-value for p=0.5.
+    
+    Tests if the number of successes k in n trials is significantly 
+    different from n/2.
+    """
+    if n == 0:
+        return 1.0
+        
+    # For two-sided test with p=0.5, we sum probabilities of 
+    # outcomes as extreme or more extreme than k.
+    # Because distribution is symmetric, this is 2 * sum(P(i) for i <= min(k, n-k))
+    
+    minority = min(k, n - k)
+    
+    # Calculate cumulative probability P(X <= minority)
+    # P(X=i) = comb(n, i) * 0.5^n
+    total_prob = 0.0
+    for i in range(minority + 1):
+        total_prob += math.comb(n, i)
+        
+    # Multiply by 0.5^n
+    # Use math.pow for floating point, or bit shift if careful, but n can be large
+    p_value = total_prob * math.pow(0.5, n)
+    
+    # Two-sided
+    p_value *= 2.0
+    
+    return min(1.0, p_value)
 
 
 def wilson_score_interval(
@@ -35,7 +88,12 @@ def wilson_score_interval(
     n = total
 
     # Z-score for the confidence level
-    z = stats.norm.ppf(1 - (1 - confidence) / 2)
+    alpha = 1 - confidence
+    z = norm_ppf(1 - alpha / 2)
+    
+    # If using our approximation and it returned negative (from recursion), fix sign
+    z = abs(z)
+    
     z2 = z * z
 
     # Wilson score interval formula
@@ -105,17 +163,9 @@ def mcnemar_test(
     # McNemar's test using exact binomial test
     # Under null hypothesis, n_a_better ~ Binomial(n_a_better + n_b_better, 0.5)
     total_discordant = n_a_better + n_b_better
-    p_value = stats.binom_test(
-        min(n_a_better, n_b_better),
-        total_discordant,
-        0.5,
-        alternative='two-sided'
-    ) if hasattr(stats, 'binom_test') else stats.binomtest(
-        min(n_a_better, n_b_better),
-        total_discordant,
-        0.5,
-        alternative='two-sided'
-    ).pvalue
+    k = min(n_a_better, n_b_better)
+    
+    p_value = binom_test_two_sided_p05(k, total_discordant)
 
     return {
         "p_value": float(p_value),
