@@ -51,7 +51,7 @@ def status():
 @cli.command()
 @click.argument("benchmark")
 @click.option("--solver", default="baseline", help="Solver to use")
-@click.option("--model", default="anthropic/claude-sonnet-4-20250514", help="Model for evaluation")
+@click.option("--model", default="anthropic/claude-opus-4-5-20251101", help="Model for evaluation")
 @click.option("--samples", type=int, default=None, help="Limit number of samples")
 @click.option("--sample-ids", type=str, default=None, help="JSON file with sample indices or comma-separated IDs")
 def run(benchmark: str, solver: str, model: str, samples: Optional[int], sample_ids: Optional[str]):
@@ -245,13 +245,17 @@ def _get_benchmark_task(benchmark: str):
         return swe_bench()
     elif benchmark == "humaneval":
         from inspect_evals.humaneval import humaneval
-        return humaneval()  # Default: 5 epochs for pass@k metrics
+        task = humaneval(sandbox="local")  # Use local sandbox (no Docker)
+        task.epochs = 5  # Default: 5 epochs for pass@k metrics
+        return task
     elif benchmark == "humaneval_fast":
         from inspect_evals.humaneval import humaneval
-        return humaneval(epochs=1)  # Fast mode: 1 epoch for rapid iteration
+        task = humaneval(sandbox="local")  # Use local sandbox (no Docker)
+        task.epochs = 1  # Fast mode: 1 epoch for rapid iteration
+        return task
     elif benchmark == "mbpp":
         from inspect_evals.mbpp import mbpp
-        return mbpp(temperature=0.5)
+        return mbpp(sandbox="local")  # Use local sandbox (no Docker)
     else:
         raise ValueError(f"Unknown benchmark: {benchmark}")
 

@@ -11,21 +11,21 @@ class TestGetBenchmarkTask:
     @pytest.fixture(autouse=True)
     def mock_inspect_evals(self):
         """Mock inspect_evals module for tests."""
-        # Create mock modules
+        # Create mock modules with MagicMock return values that support attribute setting
         mock_gsm8k = MagicMock()
-        mock_gsm8k.gsm8k = MagicMock(return_value="gsm8k_task")
+        mock_gsm8k.gsm8k = MagicMock(return_value=MagicMock(name="gsm8k_task"))
 
         mock_mmlu = MagicMock()
-        mock_mmlu.mmlu = MagicMock(return_value="mmlu_task")
+        mock_mmlu.mmlu = MagicMock(return_value=MagicMock(name="mmlu_task"))
 
         mock_humaneval = MagicMock()
-        mock_humaneval.humaneval = MagicMock(return_value="humaneval_task")
+        mock_humaneval.humaneval = MagicMock(return_value=MagicMock(name="humaneval_task"))
 
         mock_mbpp = MagicMock()
-        mock_mbpp.mbpp = MagicMock(return_value="mbpp_task")
+        mock_mbpp.mbpp = MagicMock(return_value=MagicMock(name="mbpp_task"))
 
         mock_swe_bench = MagicMock()
-        mock_swe_bench.swe_bench = MagicMock(return_value="swe_bench_task")
+        mock_swe_bench.swe_bench = MagicMock(return_value=MagicMock(name="swe_bench_task"))
 
         # Patch sys.modules
         with patch.dict(sys.modules, {
@@ -58,6 +58,7 @@ class TestGetBenchmarkTask:
 
         task = _get_benchmark_task("humaneval")
         assert task is not None
+        assert task.epochs == 5  # Should be set to 5 for standard benchmarking
 
     def test_humaneval_fast_returns_task(self):
         """humaneval_fast benchmark should return a valid task with 1 epoch."""
@@ -65,6 +66,7 @@ class TestGetBenchmarkTask:
 
         task = _get_benchmark_task("humaneval_fast")
         assert task is not None
+        assert task.epochs == 1  # Fast mode should have 1 epoch
 
     def test_mbpp_returns_task(self):
         """mbpp benchmark should return a valid task."""
