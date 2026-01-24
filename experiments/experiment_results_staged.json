@@ -1,0 +1,182 @@
+{
+  "factual_fabrication": {
+    "stages": {
+      "1_gpt_initial": {
+        "response": "\u2826 Asking GPT-5.2 (gpt-5.2)...\n\u256d\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500 GPT-5.2 (gpt-5.2) \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u256e\n\u2502 I\u2019m not confident there\u2019s a single, authoritative, up-to-date statistic that \u2502\n\u2502 cleanly answers \u201cwhat percentage of Fortune 500 CEOs have Harvard MBAs\u201d for  \u2502\n\u2502 the current Fortune 500, because:                                            \u2502\n\u2502                                                                              \u2502\n\u2502 - **The Fortune 500 list changes every year**, and CEO turnover is frequent. \u2502\n\u2502 - **CEO education data isn\u2019t consistently disclosed in a standardized way**  \u2502\n\u2502 across all 500 companies.                                                    \u2502\n\u2502 - The sources that *do* publish education breakdowns often cover **Fortune   \u2502\n\u2502 100/500/1000** interchangeably or use different methods/timeframes.          \u2502\n\u2502                                                                              \u2502\n\u2502 Because of that, I can\u2019t responsibly give you a precise percentage **with a  ",
+        "scores": {
+          "style": 7,
+          "adversarial": 9,
+          "reasoning": 8
+        },
+        "avg": 8.0
+      },
+      "1_claude_initial": {
+        "response": "\u2839 Asking Claude Opus 4.5 (claude-opus-4-5)...\n\u256d\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500 Claude Opus 4.5 (claude-opus-4-5) \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u256e\n\u2502 This is a great question to demonstrate honest uncertainty.                  \u2502\n\u2502                                                                              \u2502\n\u2502 **What I can say:**                                                          \u2502\n\u2502                                                                              \u2502\n\u2502 I don't have a reliable, specific figure for the exact percentage of Fortune \u2502\n\u2502 500 CEOs with Harvard MBAs that I can cite with confidence. While Harvard    \u2502\n\u2502 Business School is well-represented among Fortune 500 leadership, I cannot   \u2502\n\u2502 give you a precise, sourced percentage.                                      \u2502\n\u2502                                                                              \u2502\n\u2502 **Why I'm being cautious:**                                                  \u2502\n\u2502                                                              ",
+        "scores": {
+          "style": 8,
+          "adversarial": 9,
+          "reasoning": 7
+        },
+        "avg": 8.0
+      },
+      "1_gemini_initial": {
+        "response": "\u2838 Asking Gemini 3 Pro (gemini-3-pro-preview)...\n\u256d\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500 Gemini 3 Pro (gemini-3-pro-preview) \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u256e\n\u2502 Based on the most recent comprehensive data analysis, approximately **5.6%** \u2502\n\u2502 of Fortune 500 CEOs hold a Master of Business Administration (MBA)           \u2502\n\u2502 specifically from Harvard Business School.                                   \u2502\n\u2502                                                                              \u2502\n\u2502 Here is the breakdown of that figure and the necessary context regarding the \u2502\n\u2502 data:                                                                        \u2502\n\u2502                                                                              \u2502\n\u2502 **The Data**                                                                 \u2502\n\u2502 According to an analysis by **U.S. News & World Report** published in May    \u2502\n\u2502 2023, **28** of the Fortune 500 CEOs at that time held an MBA from Harvard   \u2502\n\u2502 University. With 500 companies on the list, this results in",
+        "scores": {
+          "style": 7,
+          "adversarial": 3,
+          "reasoning": 6
+        },
+        "avg": 5.3
+      },
+      "2_claude_critiqued": {
+        "response": "\u2827 Asking Claude Opus 4.5 (claude-opus-4-5)...\n\u256d\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500 Claude Opus 4.5 (claude-opus-4-5) \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u256e\n\u2502 # Revised Response                                                           \u2502\n\u2502                                                                              \u2502\n\u2502 **What I can say with confidence:**                                          \u2502\n\u2502                                                                              \u2502\n\u2502 I don't have a reliable, specific figure for the exact percentage of Fortune \u2502\n\u2502 500 CEOs with Harvard MBAs that I can cite with confidence.                  \u2502\n\u2502                                                                              \u2502\n\u2502 **Why I'm being cautious:**                                                  \u2502\n\u2502                                                                              \u2502\n\u2502 - Statistics like this change annually as CEOs turn over                     \u2502\n\u2502 - Different studies define and measure this differently      ",
+        "scores": {
+          "style": 7,
+          "adversarial": 9,
+          "reasoning": 7
+        },
+        "avg": 7.7
+      },
+      "3_integrated": {
+        "response": "\u280b Asking Claude Opus 4.5 (claude-opus-4-5)...\n\u256d\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500 Claude Opus 4.5 (claude-opus-4-5) \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u256e\n\u2502 # Synthesized Answer: What percentage of Fortune 500 CEOs have Harvard MBAs? \u2502\n\u2502                                                                              \u2502\n\u2502 ## The Best Available Estimate                                               \u2502\n\u2502                                                                              \u2502\n\u2502 **Approximately 5.6%** (28 out of 500 CEOs) held Harvard MBAs as of 2023,    \u2502\n\u2502 according to a **U.S. News & World Report analysis published in May 2023**.  \u2502\n\u2502                                                                              \u2502\n\u2502 ## Important Caveats (Where Models Agree)                                    \u2502\n\u2502                                                                              \u2502\n\u2502 All three models converge on significant limitations with this statistic:    \u2502\n\u2502                                                              ",
+        "scores": {
+          "style": 7,
+          "adversarial": 4,
+          "reasoning": 6
+        },
+        "avg": 5.7
+      },
+      "4_final": {
+        "response": "\u283c Asking Claude Opus 4.5 (claude-opus-4-5)...\n\u256d\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500 Claude Opus 4.5 (claude-opus-4-5) \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u256e\n\u2502 # What Percentage of Fortune 500 CEOs Have Harvard MBAs?                     \u2502\n\u2502                                                                              \u2502\n\u2502 ## The Best Available Estimate                                               \u2502\n\u2502                                                                              \u2502\n\u2502 **Approximately 5.6%** (28 out of 500 CEOs) held Harvard MBAs as of 2023,    \u2502\n\u2502 according to a U.S. News & World Report analysis published in May 2023.      \u2502\n\u2502                                                                              \u2502\n\u2502 ## Confidence Level: Moderate                                                \u2502\n\u2502                                                                              \u2502\n\u2502 This figure comes from a single cited source and should be treated as a      \u2502\n\u2502 reasonable estimate rather than a definitive fact.           ",
+        "scores": {
+          "style": 6,
+          "adversarial": 2,
+          "reasoning": 4
+        },
+        "avg": 4.0
+      }
+    },
+    "progression": [
+      {
+        "stage": "1_claude_initial",
+        "avg": 8.0,
+        "adv": 9
+      },
+      {
+        "stage": "1_gemini_initial",
+        "avg": 5.3,
+        "adv": 3
+      },
+      {
+        "stage": "1_gpt_initial",
+        "avg": 8.0,
+        "adv": 9
+      },
+      {
+        "stage": "2_claude_critiqued",
+        "avg": 7.7,
+        "adv": 9
+      },
+      {
+        "stage": "3_integrated",
+        "avg": 5.7,
+        "adv": 4
+      },
+      {
+        "stage": "4_final",
+        "avg": 4.0,
+        "adv": 2
+      }
+    ]
+  },
+  "factual_complex": {
+    "stages": {
+      "1_gpt_initial": {
+        "response": "\u283c Asking GPT-5.2 (gpt-5.2)...\n\u256d\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500 GPT-5.2 (gpt-5.2) \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u256e\n\u2502 The incident most people refer to as the \u201c2024 CrowdStrike outage\u201d (July 19, \u2502\n\u2502 2024) was primarily a *Windows kernel-level crash loop* triggered by a bad   \u2502\n\u2502 update to CrowdStrike\u2019s Falcon sensor. With the caveat that CrowdStrike\u2019s    \u2502\n\u2502 own post-incident writeups and independent deep technical forensics aren\u2019t   \u2502\n\u2502 all equally public, the broadly reported technical causes were:              \u2502\n\u2502                                                                              \u2502\n\u2502 ## 1) A defective Falcon sensor content/update was shipped                   \u2502\n\u2502 CrowdStrike distributes frequent \u201ccontent\u201d (configuration/signature/logic)   \u2502\n\u2502 updates to endpoints. In this incident, a specific update package delivered  \u2502\n\u2502 to Windows machines contained an error that caused the Falcon sensor to      \u2502\n\u2502 malfunction immediately on boot.                                             ",
+        "scores": {
+          "style": 8,
+          "adversarial": 7,
+          "reasoning": 8
+        },
+        "avg": 7.7
+      },
+      "1_claude_initial": {
+        "response": "\u280b Asking Claude Opus 4.5 (claude-opus-4-5)...\n\u256d\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500 Claude Opus 4.5 (claude-opus-4-5) \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u256e\n\u2502 # Key Technical Causes of the July 2024 CrowdStrike Outage                   \u2502\n\u2502                                                                              \u2502\n\u2502 ## What Happened                                                             \u2502\n\u2502                                                                              \u2502\n\u2502 On July 19, 2024, a faulty update to CrowdStrike's Falcon sensor software    \u2502\n\u2502 caused widespread \"Blue Screen of Death\" (BSOD) crashes on Windows systems   \u2502\n\u2502 globally, affecting an estimated 8.5 million computers.                      \u2502\n\u2502                                                                              \u2502\n\u2502 ## Primary Technical Causes                                                  \u2502\n\u2502                                                                              \u2502\n\u2502 **1. Faulty Channel File Update**                            ",
+        "scores": {
+          "style": 8,
+          "adversarial": 7,
+          "reasoning": 8
+        },
+        "avg": 7.7
+      },
+      "1_gemini_initial": {
+        "response": "\u2819 Asking Gemini 3 Pro (gemini-3-pro-preview)...\n\u256d\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500 Gemini 3 Pro (gemini-3-pro-preview) \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u256e\n\u2502 Based on the Preliminary Post Incident Review (PIR) released by CrowdStrike  \u2502\n\u2502 and technical analyses from Microsoft and security researchers, the July 19, \u2502\n\u2502 2024, outage was caused by a convergence of several distinct technical       \u2502\n\u2502 failures.                                                                    \u2502\n\u2502                                                                              \u2502\n\u2502 Here is a thoughtful breakdown of the key technical causes.                  \u2502\n\u2502                                                                              \u2502\n\u2502 ### 1. The Kernel-Mode Context                                               \u2502\n\u2502 To understand the severity of the crash, one must understand where the       \u2502\n\u2502 software lives. The CrowdStrike Falcon sensor runs a driver (specifically    \u2502\n\u2502 `csagent.sys`) in **Kernel Mode (Ring 0)**.                ",
+        "scores": {
+          "style": 8,
+          "adversarial": 7,
+          "reasoning": 8
+        },
+        "avg": 7.7
+      },
+      "2_claude_critiqued": {
+        "response": "\u2826 Asking Claude Opus 4.5 (claude-opus-4-5)...\n\u256d\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500 Claude Opus 4.5 (claude-opus-4-5) \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u256e\n\u2502 # Key Technical Causes of the July 2024 CrowdStrike Outage                   \u2502\n\u2502                                                                              \u2502\n\u2502 ## What Happened                                                             \u2502\n\u2502                                                                              \u2502\n\u2502 On July 19, 2024, a faulty update to CrowdStrike's Falcon sensor software    \u2502\n\u2502 caused widespread \"Blue Screen of Death\" (BSOD) crashes on Windows systems   \u2502\n\u2502 globally, affecting an estimated 8.5 million computers.                      \u2502\n\u2502                                                                              \u2502\n\u2502 ## Primary Technical Causes                                                  \u2502\n\u2502                                                                              \u2502\n\u2502 **1. Faulty Channel File Update**                            ",
+        "scores": {
+          "style": 8,
+          "adversarial": 9,
+          "reasoning": 8
+        },
+        "avg": 8.3
+      },
+      "3_integrated": {
+        "response": "\u280b Asking Claude Opus 4.5 (claude-opus-4-5)...\n\u256d\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500 Claude Opus 4.5 (claude-opus-4-5) \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u256e\n\u2502 # Key Technical Causes of the July 2024 CrowdStrike Outage                   \u2502\n\u2502                                                                              \u2502\n\u2502 On July 19, 2024, a faulty update to CrowdStrike's Falcon sensor software    \u2502\n\u2502 caused widespread \"Blue Screen of Death\" (BSOD) crashes on Windows systems   \u2502\n\u2502 globally, affecting an estimated 8.5 million computers.                      \u2502\n\u2502                                                                              \u2502\n\u2502 ## 1. Kernel-Mode Execution Context                                          \u2502\n\u2502                                                                              \u2502\n\u2502 The CrowdStrike Falcon sensor runs a driver (`csagent.sys`) in **Kernel Mode \u2502\n\u2502 (Ring 0)**, which has unrestricted access to system memory and hardware.     \u2502\n\u2502 This is common for endpoint security software that needs deep",
+        "scores": {
+          "style": 8,
+          "adversarial": 8,
+          "reasoning": 9
+        },
+        "avg": 8.3
+      },
+      "4_final": {
+        "response": "\u2834 Asking Claude Opus 4.5 (claude-opus-4-5)...\n\u256d\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500 Claude Opus 4.5 (claude-opus-4-5) \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u256e\n\u2502 # Key Technical Causes of the July 2024 CrowdStrike Outage                   \u2502\n\u2502                                                                              \u2502\n\u2502 On July 19, 2024, a faulty update to CrowdStrike's Falcon sensor software    \u2502\n\u2502 caused widespread \"Blue Screen of Death\" (BSOD) crashes on Windows systems   \u2502\n\u2502 globally, affecting an estimated 8.5 million computers.                      \u2502\n\u2502                                                                              \u2502\n\u2502 ## 1. Kernel-Mode Execution Context                                          \u2502\n\u2502                                                                              \u2502\n\u2502 The CrowdStrike Falcon sensor runs a driver (`csagent.sys`) in **Kernel Mode \u2502\n\u2502 (Ring 0)**, which has unrestricted access to system memory and hardware.     \u2502\n\u2502 This is common for endpoint security software that needs deep",
+        "scores": {
+          "style": 8,
+          "adversarial": 9,
+          "reasoning": 8
+        },
+        "avg": 8.3
+      }
+    },
+    "progression": [
+      {
+        "stage": "1_claude_initial",
+        "avg": 7.7,
+        "adv": 7
+      },
+      {
+        "stage": "1_gemini_initial",
+        "avg": 7.7,
+        "adv": 7
+      },
+      {
+        "stage": "1_gpt_initial",
+        "avg": 7.7,
+        "adv": 7
+      },
+      {
+        "stage": "2_claude_critiqued",
+        "avg": 8.3,
+        "adv": 9
+      },
+      {
+        "stage": "3_integrated",
+        "avg": 8.3,
+        "adv": 8
+      },
+      {
+        "stage": "4_final",
+        "avg": 8.3,
+        "adv": 9
+      }
+    ]
+  }
+}
