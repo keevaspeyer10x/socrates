@@ -774,6 +774,289 @@ def analyze_failures(run_ids: tuple[str, ...], output: str, intersect: bool):
         click.echo(f"\nUse with: socrates-eval run <benchmark> --sample-ids {output}")
 
 
+# =============================================================================
+# LLM-as-Judge Commands
+# =============================================================================
+
+@cli.command("judge")
+@click.argument("prompt")
+@click.argument("response")
+@click.option("--rubric", "-r", type=str, default=None, help="Path to YAML rubric file")
+@click.option("--model", "-m", type=str, default="anthropic/claude-opus-4-5-20251101", help="Judge model")
+@click.option("--threshold", type=float, default=0.6, help="Pass threshold (0.0-1.0)")
+@click.option("--multi-judge", is_flag=True, help="Use multi-judge ensemble")
+def judge_cmd(prompt: str, response: str, rubric: Optional[str], model: str, threshold: float, multi_judge: bool):
+    """Evaluate a response using LLM-as-Judge.
+
+    PROMPT is the original question/prompt.
+    RESPONSE is the AI response to evaluate.
+
+    Example:
+        socrates-eval judge "How should I design a cache?" "Use Redis with TTL..."
+    """
+    import asyncio
+
+    from .judge import load_rubric, JudgeScorer, MultiJudge
+
+    # Load rubric if specified
+    rubric_obj = None
+    if rubric:
+        rubric_obj = load_rubric(rubric)
+        click.echo(f"Using rubric: {rubric_obj.name} v{rubric_obj.version}")
+
+    if multi_judge:
+        click.echo("Running multi-judge evaluation...")
+        judge = MultiJudge(
+            rubric=rubric_obj,
+            pass_threshold=threshold,
+        )
+        result = asyncio.run(judge.score(prompt, response))
+
+        click.echo(f"\n{'=' * 60}")
+        click.echo("MULTI-JUDGE EVALUATION")
+        click.echo(f"{'=' * 60}\n")
+
+        click.echo(f"Overall Score: {result.weighted_score:.2f}")
+        click.echo(f"Passed: {'Yes' if result.passed else 'No'} (threshold: {threshold})")
+        click.echo(f"Agreement: {result.agreement:.1%}")
+        click.echo(f"High Variance: {'Yes' if result.high_variance else 'No'}")
+        click.echo(f"Needs Human Review: {'Yes' if result.needs_human_review else 'No'}")
+        click.echo(f"Aggregation: {result.aggregation_method}")
+        click.echo()
+
+        click.echo("Individual Judge Scores:")
+        for individual in result.individual_scores:
+            model_name = individual.get("judge_model", "unknown")
+            if "error" in individual:
+                click.echo(f"  {model_name}: ERROR - {individual['error']}")
+            else:
+                score = individual.get("weighted_score", 0.0)
+                click.echo(f"  {model_name}: {score:.2f}")
+    else:
+        click.echo(f"Running single-judge evaluation with {model}...")
+        judge = JudgeScorer(
+            rubric=rubric_obj,
+            judge_model=model,
+            pass_threshold=threshold,
+        )
+        result = asyncio.run(judge.score(prompt, response))
+
+        click.echo(f"\n{'=' * 60}")
+        click.echo("JUDGE EVALUATION")
+        click.echo(f"{'=' * 60}\n")
+
+        click.echo(f"Weighted Score: {result['weighted_score']:.2f}")
+        click.echo(f"Passed: {'Yes' if result['passed'] else 'No'} (threshold: {threshold})")
+        click.echo(f"Confidence: {result['confidence']:.1%}")
+        click.echo()
+
+        if result.get("scores"):
+            click.echo("Per-Criterion Scores:")
+            for criterion, data in result["scores"].items():
+                score = data.get("score", "N/A")
+                click.echo(f"  {criterion}: {score}")
+                if data.get("justification"):
+                    click.echo(f"    Justification: {data['justification'][:100]}...")
+            click.echo()
+
+        click.echo(f"Overall Assessment:\n  {result.get('overall_assessment', 'N/A')}")
+
+        if result.get("suggestions"):
+            click.echo("\nSuggestions for improvement:")
+            for suggestion in result["suggestions"]:
+                click.echo(f"  - {suggestion}")
+
+
+@cli.command("compare-responses")
+@click.argument("prompt")
+@click.argument("response_a")
+@click.argument("response_b")
+@click.option("--rubric", "-r", type=str, default=None, help="Path to YAML rubric file")
+@click.option("--model", "-m", type=str, default="anthropic/claude-opus-4-5-20251101", help="Judge model")
+@click.option("--label-a", type=str, default="A", help="Label for response A")
+@click.option("--label-b", type=str, default="B", help="Label for response B")
+def compare_responses_cmd(
+    prompt: str,
+    response_a: str,
+    response_b: str,
+    rubric: Optional[str],
+    model: str,
+    label_a: str,
+    label_b: str,
+):
+    """Compare two responses head-to-head using pairwise evaluation.
+
+    PROMPT is the original question/prompt.
+    RESPONSE_A and RESPONSE_B are the two responses to compare.
+
+    Example:
+        socrates-eval compare-responses "Explain recursion" "Recursion is..." "A function that..."
+    """
+    import asyncio
+
+    from .judge import load_rubric, PairwiseScorer
+
+    # Load rubric if specified
+    rubric_obj = None
+    if rubric:
+        rubric_obj = load_rubric(rubric)
+        click.echo(f"Using rubric: {rubric_obj.name} v{rubric_obj.version}")
+
+    click.echo(f"Running pairwise comparison with {model}...")
+    comparer = PairwiseScorer(
+        rubric=rubric_obj,
+        judge_model=model,
+        randomize_order=True,
+    )
+
+    result = asyncio.run(comparer.compare(
+        prompt=prompt,
+        response_1=response_a,
+        response_2=response_b,
+        label_1=label_a,
+        label_2=label_b,
+    ))
+
+    click.echo(f"\n{'=' * 60}")
+    click.echo("PAIRWISE COMPARISON")
+    click.echo(f"{'=' * 60}\n")
+
+    if result["winner"] == "tie":
+        click.echo("Result: TIE")
+    else:
+        click.echo(f"Winner: {result['winner_label']}")
+
+    click.echo(f"Confidence: {result['confidence']:.1%}")
+    click.echo(f"Order Randomized: {'Yes (swapped)' if result['order_was_swapped'] else 'No'}")
+    click.echo()
+
+    if result.get("criteria_verdicts"):
+        click.echo("Per-Criterion Winners:")
+        for criterion, verdict in result["criteria_verdicts"].items():
+            winner = verdict.get("winner", "N/A")
+            click.echo(f"  {criterion}: {winner}")
+            if verdict.get("explanation"):
+                click.echo(f"    {verdict['explanation'][:80]}...")
+        click.echo()
+
+    click.echo(f"Explanation:\n  {result.get('explanation', 'N/A')}")
+
+
+@cli.command("judge-file")
+@click.argument("input_file", type=click.Path(exists=True))
+@click.option("--output", "-o", type=str, required=True, help="Output JSON file for results")
+@click.option("--rubric", "-r", type=str, default=None, help="Path to YAML rubric file")
+@click.option("--multi-judge", is_flag=True, help="Use multi-judge ensemble")
+@click.option("--threshold", type=float, default=0.6, help="Pass threshold (0.0-1.0)")
+def judge_file_cmd(input_file: str, output: str, rubric: Optional[str], multi_judge: bool, threshold: float):
+    """Evaluate multiple responses from a JSON file.
+
+    INPUT_FILE should be a JSON file with format:
+    [
+        {"prompt": "...", "response": "...", "id": "optional_id"},
+        ...
+    ]
+
+    Results are written to OUTPUT file.
+
+    Example:
+        socrates-eval judge-file responses.json --output scores.json --multi-judge
+    """
+    import asyncio
+    import json
+
+    from .judge import load_rubric, JudgeScorer, MultiJudge
+
+    # Load input
+    input_path = Path(input_file)
+    samples = json.loads(input_path.read_text())
+
+    if not isinstance(samples, list):
+        click.echo("Error: Input file must contain a JSON array")
+        sys.exit(1)
+
+    click.echo(f"Loaded {len(samples)} samples from {input_file}")
+
+    # Load rubric if specified
+    rubric_obj = None
+    if rubric:
+        rubric_obj = load_rubric(rubric)
+        click.echo(f"Using rubric: {rubric_obj.name} v{rubric_obj.version}")
+
+    # Create judge
+    if multi_judge:
+        click.echo("Using multi-judge ensemble...")
+        judge = MultiJudge(rubric=rubric_obj, pass_threshold=threshold)
+    else:
+        click.echo("Using single judge...")
+        judge = JudgeScorer(rubric=rubric_obj, pass_threshold=threshold)
+
+    # Evaluate all samples
+    async def evaluate_all():
+        results = []
+        for i, sample in enumerate(samples):
+            prompt = sample.get("prompt", "")
+            response = sample.get("response", "")
+            sample_id = sample.get("id", i)
+
+            click.echo(f"  Evaluating sample {i + 1}/{len(samples)}...", nl=False)
+
+            if multi_judge:
+                result = await judge.score(prompt, response)
+                results.append({
+                    "id": sample_id,
+                    "weighted_score": result.weighted_score,
+                    "passed": result.passed,
+                    "agreement": result.agreement,
+                    "high_variance": result.high_variance,
+                    "needs_human_review": result.needs_human_review,
+                })
+            else:
+                result = await judge.score(prompt, response)
+                results.append({
+                    "id": sample_id,
+                    "weighted_score": result["weighted_score"],
+                    "passed": result["passed"],
+                    "scores": result.get("scores", {}),
+                    "confidence": result.get("confidence", 0.0),
+                })
+
+            click.echo(f" score={results[-1]['weighted_score']:.2f}")
+
+        return results
+
+    results = asyncio.run(evaluate_all())
+
+    # Calculate summary stats
+    passed_count = sum(1 for r in results if r["passed"])
+    avg_score = sum(r["weighted_score"] for r in results) / len(results) if results else 0
+
+    output_data = {
+        "summary": {
+            "total": len(results),
+            "passed": passed_count,
+            "pass_rate": passed_count / len(results) if results else 0,
+            "avg_score": avg_score,
+            "threshold": threshold,
+            "multi_judge": multi_judge,
+            "rubric": rubric_obj.name if rubric_obj else "default_reasoning",
+        },
+        "results": results,
+    }
+
+    # Write output
+    output_path = Path(output)
+    output_path.write_text(json.dumps(output_data, indent=2))
+
+    click.echo(f"\n{'=' * 60}")
+    click.echo("EVALUATION COMPLETE")
+    click.echo(f"{'=' * 60}")
+    click.echo(f"Total samples: {len(results)}")
+    click.echo(f"Passed: {passed_count} ({passed_count / len(results):.1%})")
+    click.echo(f"Average score: {avg_score:.2f}")
+    click.echo(f"Results written to: {output}")
+
+
 def main():
     """Main entry point."""
     cli()

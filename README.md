@@ -128,6 +128,40 @@ socrates-eval lessons --approve lesson_20260122_wrong_answer
 socrates-eval lessons --stats
 ```
 
+### Test Scripts
+
+**`test_hard_question.py`** - Compare minds modes on challenging questions
+
+This script evaluates how different AI collaboration modes handle hard conceptual questions:
+
+```bash
+# Run all modes on the built-in hard question
+python test_hard_question.py
+
+# Use a custom question
+python test_hard_question.py "Your challenging question here..."
+
+# Clear cached responses and re-run
+python test_hard_question.py --fresh
+```
+
+**Features:**
+- Compares minds_default, minds_synthesis, minds_debate, and solo models
+- LLM-as-Judge evaluation with rubric-based scoring
+- **Automatic clarification retry**: If a model misunderstands the question (e.g., writes code when analysis was expected), it automatically retries with a clarifying prompt
+- Caches responses to avoid re-running expensive queries
+- Generates JSON output files for analysis
+
+The clarification detection looks for:
+- Code-heavy responses (>30% code lines) when conceptual analysis was expected
+- Missing required concepts from the question
+- Truncated responses
+
+**Output files:**
+- `hard_question_responses.json` - Raw model responses
+- `hard_question_results.json` - Evaluation scores
+- `hard_question_clarification_metadata.json` - Tracks which models needed clarification
+
 ### Custom Solvers
 
 You can create custom solvers by extending the `Solver` base class:
