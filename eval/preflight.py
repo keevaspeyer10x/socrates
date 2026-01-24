@@ -54,7 +54,7 @@ def check_docker_available() -> CheckResult:
         result = subprocess.run(
             ["docker", "info"],
             capture_output=True,
-            timeout=5
+            timeout=15  # Increased for WSL/Docker Desktop
         )
         if result.returncode == 0:
             return CheckResult(ok=True, message="Docker available")

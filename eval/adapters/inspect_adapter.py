@@ -116,7 +116,7 @@ class InspectAdapter:
         passed = False
         score_value = 0.0
 
-        for key in ["match", "accuracy", "correct", "pass", "resolved"]:
+        for key in ["match", "accuracy", "correct", "pass", "resolved", "verify"]:
             if key in scores:
                 score_obj = scores[key]
                 value = getattr(score_obj, "value", score_obj)
