@@ -54,7 +54,8 @@ def status():
 @click.option("--model", default="anthropic/claude-opus-4-5-20251101", help="Model for evaluation")
 @click.option("--samples", type=int, default=None, help="Limit number of samples")
 @click.option("--sample-ids", type=str, default=None, help="JSON file with sample indices or comma-separated IDs")
-def run(benchmark: str, solver: str, model: str, samples: Optional[int], sample_ids: Optional[str]):
+@click.option("--solver-mode", type=str, default="baseline", help="Solver mode (baseline, rigor, deep) for minds solver")
+def run(benchmark: str, solver: str, model: str, samples: Optional[int], sample_ids: Optional[str], solver_mode: str):
     """Run evaluation on a benchmark.
 
     BENCHMARK is the name of the benchmark (e.g., gsm8k, mmlu, swe_bench).
@@ -115,7 +116,7 @@ def run(benchmark: str, solver: str, model: str, samples: Optional[int], sample_
 
     # Run evaluation with try...finally for state cleanup (LEARNINGS recommendation)
     try:
-        _run_evaluation(benchmark, solver, model, samples, run_id, parsed_sample_ids)
+        _run_evaluation(benchmark, solver, model, samples, run_id, parsed_sample_ids, solver_mode)
         state.finish_run()
         state.save(STATE_FILE)
 
@@ -138,7 +139,8 @@ def _run_evaluation(
     model: str,
     samples: Optional[int],
     run_id: str,
-    sample_ids: Optional[list[str | int]] = None
+    sample_ids: Optional[list[str | int]] = None,
+    solver_mode: str = "baseline"
 ):
     """Internal function to run evaluation."""
     from inspect_ai import eval as inspect_eval
@@ -161,8 +163,13 @@ def _run_evaluation(
         from inspect_ai.solver import solver as solver_decorator
 
         solver_class = get_solver(solver)
-        solver_instance = solver_class()
-        click.echo(f"Using solver: {solver_instance.name}")
+        # Pass mode to minds solver
+        if solver == "minds":
+            solver_instance = solver_class(mode=solver_mode)
+            click.echo(f"Using solver: {solver_instance.name} (mode={solver_mode})")
+        else:
+            solver_instance = solver_class()
+            click.echo(f"Using solver: {solver_instance.name}")
 
         # Create an Inspect-compatible solver using the @solver decorator
         # The decorator returns a factory function. Calling it returns the actual
@@ -262,6 +269,11 @@ def _get_benchmark_task(benchmark: str):
     elif benchmark == "bigcodebench":
         from inspect_evals.bigcodebench import bigcodebench
         return bigcodebench()  # Uses Docker sandbox by default
+    elif benchmark in ("gpqa", "gpqa_diamond"):
+        from inspect_evals.gpqa import gpqa_diamond
+        # Default: 4 epochs, chain-of-thought enabled
+        # Use 1 epoch for faster iteration
+        return gpqa_diamond(cot=True, epochs=1)
     elif benchmark == "bigcodebench_hard":
         # BigCodeBench-Hard requires loading from bigcode/bigcodebench-hard dataset
         # Since inspect_evals bigcodebench() loads from bigcode/bigcodebench,

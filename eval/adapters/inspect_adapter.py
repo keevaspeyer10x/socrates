@@ -116,28 +116,44 @@ class InspectAdapter:
         passed = False
         score_value = 0.0
 
-        for key in ["match", "accuracy", "correct", "pass", "resolved", "verify"]:
-            if key in scores:
-                score_obj = scores[key]
-                value = getattr(score_obj, "value", score_obj)
+        # Handle 'choice' scorer (used by GPQA, multiple choice benchmarks)
+        # The choice scorer returns:
+        #   value = 'C' (CORRECT) or 'I' (INCORRECT)
+        #   answer = the letter(s) of the correct answer(s)
+        if "choice" in scores:
+            score_obj = scores["choice"]
+            value = getattr(score_obj, "value", None)
+            # 'C' means CORRECT, 'I' means INCORRECT
+            if value is not None:
+                passed = str(value).strip().upper() == 'C'
+                score_value = 1.0 if passed else 0.0
+            else:
+                passed = False
+                score_value = 0.0
+        else:
+            # Check other common score keys
+            for key in ["match", "accuracy", "correct", "pass", "resolved", "verify"]:
+                if key in scores:
+                    score_obj = scores[key]
+                    value = getattr(score_obj, "value", score_obj)
 
-                # Handle letter grades (C=Correct, I=Incorrect, P=Partial)
-                if isinstance(value, str):
-                    value_upper = value.upper()
-                    if value_upper in ("C", "CORRECT", "Y", "YES", "TRUE", "1"):
-                        passed = True
-                        score_value = 1.0
-                    elif value_upper in ("P", "PARTIAL"):
-                        passed = False
-                        score_value = 0.5
+                    # Handle letter grades (C=Correct, I=Incorrect, P=Partial)
+                    if isinstance(value, str):
+                        value_upper = value.upper()
+                        if value_upper in ("C", "CORRECT", "Y", "YES", "TRUE", "1"):
+                            passed = True
+                            score_value = 1.0
+                        elif value_upper in ("P", "PARTIAL"):
+                            passed = False
+                            score_value = 0.5
+                        else:
+                            passed = False
+                            score_value = 0.0
                     else:
-                        passed = False
-                        score_value = 0.0
-                else:
-                    # Numeric score
-                    score_value = float(value) if value is not None else 0.0
-                    passed = score_value > 0.5
-                break
+                        # Numeric score
+                        score_value = float(value) if value is not None else 0.0
+                        passed = score_value > 0.5
+                    break
 
         failure_mode = None if passed else "wrong_answer"
 
