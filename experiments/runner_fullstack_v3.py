@@ -14,6 +14,8 @@ Updated with research findings:
 - Don't repeat unverified specifics from single models
 - Preserve honest uncertainty
 - Final critique focuses on verification, not content changes
+
+Supports testing with 3 vs 5 models to compare synthesis quality.
 """
 
 import json
@@ -212,14 +214,24 @@ Output JSON only: {{"style": N, "adversarial": N, "reasoning": N}}"""
     return {"style": 5, "adversarial": 5, "reasoning": 5}
 
 
-def run_fullstack_pipeline(question: str) -> dict:
-    """Run the complete fullstack verification pipeline."""
+def run_fullstack_pipeline(question: str, models: list[str] = None) -> dict:
+    """Run the complete fullstack verification pipeline.
+
+    Args:
+        question: The question to answer
+        models: List of models to query. Default is 3 models: ["claude", "gpt", "gemini"]
+                Can also use 5 models: ["claude", "gpt", "gemini", "grok", "deepseek"]
+    """
+    if models is None:
+        models = ["claude", "gpt", "gemini"]
+
     stages = {}
+    stages["model_count"] = len(models)
 
     # STEP 1: Enhanced prompt + multi-model query
-    log.info("  Step 1: Multi-model query with enhanced prompt")
+    log.info(f"  Step 1: Multi-model query ({len(models)} models) with enhanced prompt")
     enhanced_q = ENHANCED_PROMPT.format(question=question)
-    model_responses = query_multi_models(enhanced_q, ["claude", "gpt", "gemini"])
+    model_responses = query_multi_models(enhanced_q, models)
     stages["1_initial_responses"] = model_responses
 
     # STEP 2: Self-critique each response
@@ -275,17 +287,28 @@ def run_baseline(question: str) -> str:
 
 
 def run_experiment():
-    """Run the fullstack pipeline on all test questions."""
+    """Run the fullstack pipeline on all test questions with 3 and 5 models."""
     results = {
         "timestamp": datetime.now().isoformat(),
         "pipeline_version": "fullstack_v3",
         "questions": {}
     }
 
+    # Model configurations to test
+    MODEL_CONFIGS = {
+        "3_models": ["claude", "gpt", "gemini"],
+        "5_models": ["claude", "gpt", "gemini", "grok", "deepseek"],
+    }
+
     for q_name, question in QUESTIONS.items():
         log.info(f"\n{'='*60}")
         log.info(f"Question: {q_name}")
         log.info(f"{'='*60}")
+
+        results["questions"][q_name] = {
+            "question": question,
+            "configs": {}
+        }
 
         # Run baseline
         log.info("\nRunning baseline...")
@@ -294,44 +317,60 @@ def run_experiment():
         baseline_avg = sum(baseline_scores.values()) / 3
         log.info(f"  Baseline: S:{baseline_scores['style']} A:{baseline_scores['adversarial']} R:{baseline_scores['reasoning']} (avg:{baseline_avg:.1f})")
 
-        # Run fullstack pipeline
-        log.info("\nRunning fullstack pipeline...")
-        pipeline_result = run_fullstack_pipeline(question)
-        final_scores = judge_response(pipeline_result["final_response"], question)
-        final_avg = sum(final_scores.values()) / 3
-        log.info(f"  Fullstack: S:{final_scores['style']} A:{final_scores['adversarial']} R:{final_scores['reasoning']} (avg:{final_avg:.1f})")
+        results["questions"][q_name]["baseline"] = {
+            "response": baseline[:500] + "..." if len(baseline) > 500 else baseline,
+            "scores": baseline_scores,
+            "avg": baseline_avg
+        }
 
-        # Delta
-        delta = final_avg - baseline_avg
-        log.info(f"  Delta: {delta:+.1f}")
+        # Run fullstack pipeline with each model configuration
+        for config_name, models in MODEL_CONFIGS.items():
+            log.info(f"\nRunning fullstack pipeline ({config_name})...")
+            pipeline_result = run_fullstack_pipeline(question, models)
+            final_scores = judge_response(pipeline_result["final_response"], question)
+            final_avg = sum(final_scores.values()) / 3
+            log.info(f"  {config_name}: S:{final_scores['style']} A:{final_scores['adversarial']} R:{final_scores['reasoning']} (avg:{final_avg:.1f})")
 
-        results["questions"][q_name] = {
-            "question": question,
-            "baseline": {
-                "response": baseline[:500] + "..." if len(baseline) > 500 else baseline,
-                "scores": baseline_scores,
-                "avg": baseline_avg
-            },
-            "fullstack": {
-                "stages": {k: v[:300] + "..." if isinstance(v, str) and len(v) > 300 else v
+            delta = final_avg - baseline_avg
+            log.info(f"  Delta vs baseline: {delta:+.1f}")
+
+            results["questions"][q_name]["configs"][config_name] = {
+                "models": models,
+                "stages": {k: (v[:300] + "..." if isinstance(v, str) and len(v) > 300 else v)
                           for k, v in pipeline_result["stages"].items()},
                 "final_response": pipeline_result["final_response"][:500] + "...",
                 "scores": final_scores,
-                "avg": final_avg
-            },
-            "delta": delta
-        }
+                "avg": final_avg,
+                "delta_vs_baseline": delta
+            }
 
     # Summary
     log.info(f"\n{'='*60}")
-    log.info("SUMMARY")
+    log.info("SUMMARY: 3 Models vs 5 Models")
     log.info(f"{'='*60}")
 
+    log.info(f"\n{'Question':<25} | {'Baseline':>8} | {'3 Models':>8} | {'5 Models':>8} | {'Best':>10}")
+    log.info("-" * 70)
+
     for q_name, data in results["questions"].items():
-        log.info(f"\n{q_name}:")
-        log.info(f"  Baseline:  avg={data['baseline']['avg']:.1f}")
-        log.info(f"  Fullstack: avg={data['fullstack']['avg']:.1f}")
-        log.info(f"  Delta:     {data['delta']:+.1f}")
+        baseline_avg = data["baseline"]["avg"]
+        avg_3 = data["configs"]["3_models"]["avg"]
+        avg_5 = data["configs"]["5_models"]["avg"]
+        best = "3_models" if avg_3 >= avg_5 else "5_models"
+        log.info(f"{q_name:<25} | {baseline_avg:>8.1f} | {avg_3:>8.1f} | {avg_5:>8.1f} | {best:>10}")
+
+    # Overall comparison
+    log.info(f"\n{'='*60}")
+    log.info("OVERALL AVERAGES")
+    log.info(f"{'='*60}")
+
+    all_baseline = [d["baseline"]["avg"] for d in results["questions"].values()]
+    all_3 = [d["configs"]["3_models"]["avg"] for d in results["questions"].values()]
+    all_5 = [d["configs"]["5_models"]["avg"] for d in results["questions"].values()]
+
+    log.info(f"Baseline:  {sum(all_baseline)/len(all_baseline):.1f}")
+    log.info(f"3 Models:  {sum(all_3)/len(all_3):.1f}")
+    log.info(f"5 Models:  {sum(all_5)/len(all_5):.1f}")
 
     # Save
     output_file = "/home/keeva/socrates/experiments/experiment_results_fullstack_v3.json"
