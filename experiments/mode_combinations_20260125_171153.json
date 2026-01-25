@@ -1,0 +1,358 @@
+{
+  "timestamp": "20260125_171153",
+  "question": "What percentage of Fortune 500 CEOs have Harvard MBAs? Cite your source.",
+  "valid_combinations": [
+    {
+      "name": "baseline",
+      "args": []
+    },
+    {
+      "name": "rigor",
+      "args": [
+        "--rigor"
+      ]
+    },
+    {
+      "name": "deep",
+      "args": [
+        "--deep"
+      ]
+    },
+    {
+      "name": "cheap",
+      "args": [
+        "--cheap"
+      ]
+    },
+    {
+      "name": "fast",
+      "args": [
+        "--fast"
+      ]
+    },
+    {
+      "name": "rigor_cheap",
+      "args": [
+        "--rigor",
+        "--cheap"
+      ]
+    },
+    {
+      "name": "rigor_fast",
+      "args": [
+        "--rigor",
+        "--fast"
+      ]
+    },
+    {
+      "name": "deep_cheap",
+      "args": [
+        "--deep",
+        "--cheap"
+      ]
+    },
+    {
+      "name": "deep_fast",
+      "args": [
+        "--deep",
+        "--fast"
+      ]
+    },
+    {
+      "name": "single_claude",
+      "args": [
+        "--model",
+        "claude"
+      ]
+    },
+    {
+      "name": "single_claude_rigor",
+      "args": [
+        "--model",
+        "claude",
+        "--rigor"
+      ]
+    },
+    {
+      "name": "single_claude_cheap",
+      "args": [
+        "--model",
+        "claude",
+        "--cheap"
+      ]
+    },
+    {
+      "name": "single_claude_fast",
+      "args": [
+        "--model",
+        "claude",
+        "--fast"
+      ]
+    }
+  ],
+  "invalid_combinations": [
+    {
+      "name": "deep_single",
+      "args": [
+        "--deep",
+        "--model",
+        "claude"
+      ],
+      "expected_error": "requires multiple models"
+    },
+    {
+      "name": "deep_quick",
+      "args": [
+        "--deep",
+        "--quick"
+      ],
+      "expected_error": "requires multiple models"
+    }
+  ],
+  "results": [
+    {
+      "name": "deep_single",
+      "args": [
+        "--deep",
+        "--model",
+        "claude"
+      ],
+      "success": true,
+      "time_seconds": 0,
+      "cost_usd": 0,
+      "response": "",
+      "scores": {},
+      "error": "Properly rejected: requires multiple models"
+    },
+    {
+      "name": "deep_quick",
+      "args": [
+        "--deep",
+        "--quick"
+      ],
+      "success": true,
+      "time_seconds": 0,
+      "cost_usd": 0,
+      "response": "",
+      "scores": {},
+      "error": "Properly rejected: requires multiple models"
+    },
+    {
+      "name": "baseline",
+      "args": [],
+      "success": true,
+      "time_seconds": 22.0,
+      "cost_usd": 0.0138,
+      "response": "# Synthesis: Harvard MBAs Among Fortune 500 CEOs\n## Consensus Statement\n**There is no consensus on the exact percentage.** All models agree that\nHarvard Business School produces the most Fortune 500 CEOs of any MBA\nprogram, but cited figures range from **3% to 9.4%** depending on the source\nand year.\n## Points of Agreement\n- Harvard consistently leads all business schools in producing Fortune 500\nCEOs\n- The percentage fluctuates annually as CEO rosters change\n- Different methodologies yield different results\n- Two Claude responses appropriately declined to cite a specific figure\nwithout confidence\n## Conflicting Data (by source cited)\n| Model | Percentage | CEOs | Source |\n|-------|-----------|------|--------|\n| GPT | 3% | 15 | Fortune analysis |\n| Grok | 5.8% | 29 | Poets&Quants (June 2024) |\n| DeepSeek | 9.4% | 47 | Fortune (August 2023) |\n## However...\nThese discrepancies are significant and suggest either: (1) different list\nyears, (2) different counting methodologies, or (3) potential citation\nerrors. The threefold difference (15 vs. 47 CEOs) from sources both claiming\nto cite *Fortune* is a red flag.\n## Confidence Ranking\n1. **Strong confidence:** Harvard leads all MBA programs for Fortune 500 CEO\nproduction\n2. **Moderate confidence:** The true figure likely falls in the **3-10%\nrange**\n3. **Low confidence:** Any specific percentage\u2014verify directly with primary\nsources\n## Recommendation\nFor an authoritative, current figure, consult:\n- Poets&Quants annual analysis\n- Fortune's CEO education coverage\n- Harvard Business School's official statistics\n\u24d8 Transparency note: This synthesis was created by claude, which also\nprovided one of the responses being synthesized.",
+      "scores": {
+        "style": 7,
+        "adversarial": 8,
+        "reasoning": 8
+      },
+      "error": null
+    },
+    {
+      "name": "rigor",
+      "args": [
+        "--rigor"
+      ],
+      "success": true,
+      "time_seconds": 32.13,
+      "cost_usd": 0.0224,
+      "response": "# Synthesis: Harvard MBAs Among Fortune 500 CEOs\n## No Consensus on the Number\nThe models provide strikingly different estimates: **3%**, **5.8%**,\n**10-12%**, and **4-8%**. This wide range (3-12%) signals significant\nuncertainty, and notably, two models explicitly declined to provide a\nconfident figure, citing source verification concerns.\n## What the Models Agree On\n- **Harvard Business School produces more Fortune 500 CEOs than any other\nMBA program** \u2014 this is the one consistent finding across all responses\n- The exact percentage **fluctuates year-to-year** with CEO turnover\n- **No model could provide a verifiable, current source** that they had high\nconfidence in\n- For a reliable answer, you should consult primary sources directly:\nFortune's annual CEO analysis, Harvard Business School's alumni data, or\nexecutive search firm reports (Spencer Stuart, Korn Ferry, Heidrick &\nStruggles)\n## Why the Estimates Diverge\nThe disagreement likely stems from:\n- Different reference years (2014 vs. 2022 vs. 2023)\n- Methodological differences in underlying studies\n- Possible confusion between \"Harvard MBA\" and \"any Harvard degree\"\n- Model uncertainty about source reliability\n## Bottom Line\n**Don't trust any specific number from this synthesis.** The honest answer\nis that the figure is somewhere in the single digits to low double digits,\nwith Harvard consistently ranked #1 among MBA programs.\n**For an actionable, citable figure:** Go directly to Poets&Quants' Fortune\n500 CEO education analyses (published annually) or Spencer Stuart's CEO\nsuccession studies \u2014 these are the primary sources multiple models\nreferenced.\n\u24d8 Transparency note: This synthesis was created by claude, which also\nprovided one of the responses being synthesized.",
+      "scores": {
+        "style": 6,
+        "adversarial": 8,
+        "reasoning": 7
+      },
+      "error": null
+    },
+    {
+      "name": "deep",
+      "args": [
+        "--deep"
+      ],
+      "success": true,
+      "time_seconds": 37.49,
+      "cost_usd": 0.0751,
+      "response": "# What Percentage of Fortune 500 CEOs Have Harvard MBAs?\n**Direct answer:** I cannot provide a reliable, citable percentage.\n## Why I Can't Give You a Number\nBoth models I consulted acknowledged they **cannot verify a specific\nfigure** for this question. Initial estimates ranged from ~3% to 5-12%, but\nupon review, neither model could point to a specific, citable source with a\ndefined methodology and year.\n## What I Can Say With Moderate Confidence\n- **Harvard MBA is likely the single most common MBA program** among Fortune\n500 CEOs (though this isn't certain\u2014Wharton or Stanford may occasionally\nedge ahead)\n- **The large majority of Fortune 500 CEOs do NOT have Harvard\nMBAs**\u2014whatever the true figure is, it's clearly a small minority\n- **Having a Harvard MBA is neither necessary nor sufficient** for reaching\nCEO roles\n- **\"Harvard alumni (any degree)\" and \"Harvard MBA\" are different\nquestions**\u2014general Harvard counts don't tell you the MBA-specific share\n## How to Get an Actual Answer\nTo get a defensible number, you need a dataset that:\n1. Lists each Fortune 500 CEO's education for a **specific year**\n2. Explicitly identifies **HBS MBA holders** (not just Harvard affiliations)\n3. Has a clear methodology for CEOs with multiple degrees\n**Potential sources to check:**\n- BoardEx or Equilar (subscription databases)\n- Fortune's own periodic analyses of CEO backgrounds\n- Bloomberg Businessweek or Poets&Quants MBA rankings coverage\n- Company proxy statements (labor-intensive but primary source)\nIf you have access to a specific dataset or year in mind, I can help you\nreason through it\u2014but I won't fabricate a precise-sounding statistic without\nverification.",
+      "scores": {
+        "style": 6,
+        "adversarial": 9,
+        "reasoning": 7
+      },
+      "error": null
+    },
+    {
+      "name": "cheap",
+      "args": [
+        "--cheap"
+      ],
+      "success": true,
+      "time_seconds": 53.5,
+      "cost_usd": 0.0036,
+      "response": "# Synthesis: Harvard MBAs Among Fortune 500 CEOs\n## No Clear Consensus\nThe models provide significantly different estimates, ranging from **less\nthan 1% to approximately 16%**, indicating substantial uncertainty around\nthis statistic.\n## Points of Agreement\n- **No single, definitive, regularly-updated source exists** for this\nspecific metric\n- The percentage fluctuates year-to-year with CEO turnover\n- Recommended sources for verification: Harvard Business School\npublications, Fortune, Harvard Business Review, and business research\ndatabases\n## Key Disagreements\n| Estimate | Source Cited | Model |\n|----------|--------------|-------|\n| <1% | Catalyst 2019 Census | Gemini |\n| ~6% | Poets&Quants 2021 | Grok (as secondary reference) |\n| ~10% | HBS promotional materials | Grok, DeepSeek |\n| ~16% | General estimate | GPT |\n**However...** The wide variance suggests methodological differences (how\n\"Harvard MBA\" is defined, which year's Fortune 500 list, etc.) or\npotentially unreliable sourcing. Notably:\n- *Gemini's* Catalyst citation appears misapplied\u2014that report focused on\nwomen in leadership, not MBA credentials broadly\n- *Grok* acknowledges independent analyses show lower figures (~6%) than\nHBS's own claims (~10%)\n## Confidence Ranking\n1. **High confidence:** Harvard MBAs are notably represented but not\ndominant among Fortune 500 CEOs\n2. **Medium confidence:** The figure likely falls in the **5-10% range**\n(based on the clustering of estimates from Grok and DeepSeek, with\nindependent verification suggesting the lower end)\n3. **Low confidence:** Any single precise percentage\u2014verify directly with\ncurrent HBS alumni data or Fortune's latest analysis\n## Bottom Line\n*Claude's* recommendation is most prudent: **consult primary sources\ndirectly** for a citable figure, as the models disagree significantly and\nsome citations appear questionable.\n\u24d8 Transparency note: This synthesis was created by claude, which also\nprovided one of the responses being synthesized.",
+      "scores": {
+        "style": 6,
+        "adversarial": 7,
+        "reasoning": 7
+      },
+      "error": null
+    },
+    {
+      "name": "fast",
+      "args": [
+        "--fast"
+      ],
+      "success": true,
+      "time_seconds": 53.87,
+      "cost_usd": 0.0076,
+      "response": "# Synthesis: Harvard MBAs Among Fortune 500 CEOs\n## Consensus\nAll models agree that Harvard Business School is the **top MBA program\nrepresented** among Fortune 500 CEOs, with estimates ranging from **7-12%**\n(most clustering around 8-10%). All models also acknowledge that this figure\nfluctuates annually as CEO composition changes.\n## Agreed Recommendations\n- Harvard MBAs are well-represented but still a minority of Fortune 500 CEOs\n- The figure has remained relatively stable over recent years\n- For current data, check: Harvard Business School publications, Spencer\nStuart, or Fortune/Bloomberg analyses\n## However...\n**No model provided a fully verified, current source:**\n- **Gemini** cites a specific U.S. News 2023 study (35 CEOs = 7%) \u2014 *but\nthis should be independently verified*\n- **DeepSeek** offers multiple sources including Poets & Quants 2021 (41\nCEOs = 8.2%) and an HBS 2019 report (~10%)\n- **GPT** references Spencer Stuart but without a direct link\n- **Both Claude responses** explicitly declined to cite sources they\ncouldn't verify\n## Confidence Ranking\n| Confidence | Finding |\n|------------|---------|\n| **Strong** | Harvard is #1 MBA program for Fortune 500 CEOs |\n| **Strong** | Percentage is in single digits to low double digits (7-12%) |\n| **Moderate** | ~8-10% is the most likely current range |\n| **Weak** | Any specific cited source (verify independently) |\n**Bottom line:** Approximately **8-10%** is a reasonable estimate, but\nverify with primary sources like HBS or the U.S. News/Poets & Quants studies\ncited above.\n\u24d8 Transparency note: This synthesis was created by claude, which also\nprovided one of the responses being synthesized.",
+      "scores": {
+        "style": 7,
+        "adversarial": 8,
+        "reasoning": 7
+      },
+      "error": null
+    },
+    {
+      "name": "rigor_cheap",
+      "args": [
+        "--rigor",
+        "--cheap"
+      ],
+      "success": true,
+      "time_seconds": 24.62,
+      "cost_usd": 0.0029,
+      "response": "## Synthesis\n**No consensus on the exact percentage.** Models cite figures ranging from\n4% to 12%, with different sources and years\u2014none of which can be\nindependently verified here.\n### What All Models Agree On:\n- Harvard MBAs are **overrepresented** among Fortune 500 CEOs relative to\nthe general population\n- The exact percentage **fluctuates annually** due to CEO turnover\n- Other elite MBA programs (Wharton, Stanford) also produce significant\nnumbers of Fortune 500 CEOs\n### The Numbers Problem:\nThe responses give figures of 4%, ~10%, and 12%\u2014a threefold spread. Each\ncites a different source (Poets&Quants, HBS tracking pages, GMAC, Fortune).\nThis disagreement, combined with one model explicitly refusing to provide a\nnumber due to verification concerns, suggests **low confidence in any\nspecific figure**.\nThe rough range appears to be **somewhere between 4-12%**, but I cannot\nreliably narrow this further.\n### Actionable Recommendation:\nIf precision matters for your use case, go directly to:\n1. Harvard Business School's published alumni data\n2. Recent Fortune or Spencer Stuart CEO surveys\n3. Poets&Quants analyses of Fortune 500 leadership\nThe qualitative claim (Harvard produces a disproportionate share of Fortune\n500 CEOs) is robust. The specific percentage is not reliably answerable from\nthese responses.\n\u24d8 Transparency note: This synthesis was created by claude, which also\nprovided one of the responses being synthesized.",
+      "scores": {
+        "style": 7,
+        "adversarial": 8,
+        "reasoning": 7
+      },
+      "error": null
+    },
+    {
+      "name": "rigor_fast",
+      "args": [
+        "--rigor",
+        "--fast"
+      ],
+      "success": true,
+      "time_seconds": 43.6,
+      "cost_usd": 0.0043,
+      "response": "# Synthesis: Harvard MBAs Among Fortune 500 CEOs\n## Consensus\nFour of five models agree the figure falls in the **8\u201311% range** (roughly\n40\u201350 CEOs out of 500), with Harvard Business School consistently ranked as\nthe top MBA producer of Fortune 500 CEOs. All models that provided numbers\nconverge on approximately **41\u201347 Harvard MBA holders** among current\nFortune 500 CEOs.\n## Agreed Points\n- Harvard MBAs are substantially overrepresented relative to their share of\nthe general workforce\n- Harvard leads other MBA programs (Wharton, Stanford) by a significant\nmargin\n- The exact percentage fluctuates with annual CEO turnover\n- \"Harvard MBA\" is sometimes conflated with other Harvard degrees, which\ninflates casual claims\n## However...\n**Claude declined to provide a number**, citing lack of access to a\nverifiable, current database and concern about fabricating figures. This is\na meaningful dissent\u2014it signals that the specific percentages and source\ncitations offered by other models may not be independently verifiable and\ncould reflect hallucinated details rather than confirmed data.\n## Confidence Ranking\n1. **Strong consensus:** Harvard is the #1 MBA program for Fortune 500 CEOs\nby a wide margin\n2. **Moderate consensus:** The percentage is likely somewhere in the 8\u201311%\nrange\n3. **Low confidence:** Specific source citations (Fortune, WSJ,\nPoets&Quants, HBS website)\u2014these were not corroborated across models and may\nbe fabricated\n## Actionable Recommendation\nIf you need this figure for a real decision, verify directly via:\n- Harvard Business School's official alumni statistics\n- Cross-referencing the current Fortune 500 list with LinkedIn/company bios\n- Recent business journalism with transparent methodology\n\u24d8 Transparency note: This synthesis was created by claude, which also\nprovided one of the responses being synthesized.",
+      "scores": {
+        "style": 7,
+        "adversarial": 8,
+        "reasoning": 8
+      },
+      "error": null
+    },
+    {
+      "name": "deep_cheap",
+      "args": [
+        "--deep",
+        "--cheap"
+      ],
+      "success": true,
+      "time_seconds": 24.87,
+      "cost_usd": 0.0217,
+      "response": "# Fortune 500 CEOs with Harvard MBAs\n**Direct answer:** I cannot provide a verified, citable percentage.\n## What we know\nAll three models agree on these points:\n1. **Harvard Business School is overrepresented** among Fortune 500 CEO\neducational backgrounds compared to other institutions \u2014 this is\nwell-established.\n2. **No single, authoritative public source** maintains this statistic in\nreal-time. The number fluctuates with CEO turnover, and definitions vary\n(which Harvard programs count?).\n3. **Ballpark estimates of 10-15%** appear in business media, but none of\nthe models could verify a specific source for this figure. One model\nmentioned \"approximately 11%\" but then retracted it as unverifiable upon\nreview.\n## How to get an accurate answer\nThe models converged on these approaches:\n- **Harvard Business School** may publish alumni career data in annual\nreports\n- **Executive research firms** and proprietary databases track CEO\nbackgrounds\n- **Manual audit** of current Fortune 500 CEO bios would yield a precise\nnumber\n- **Business publications** like *Financial Times* periodically conduct\nthese analyses \u2014 search for their most recent executive education surveys\n## Why I'm not citing a number\nTwo models explicitly refused to provide a specific percentage without\nverification. The third initially offered one, then acknowledged it lacked\nconcrete backing. When models agree they cannot verify something, that\nhonesty should be preserved rather than overridden.\n**Bottom line:** Harvard MBAs are notably represented among Fortune 500\nCEOs, but for a citable current figure, consult HBS directly or recent\nexecutive leadership research from credible business publications.",
+      "scores": {
+        "style": 6,
+        "adversarial": 8,
+        "reasoning": 7
+      },
+      "error": null
+    },
+    {
+      "name": "deep_fast",
+      "args": [
+        "--deep",
+        "--fast"
+      ],
+      "success": true,
+      "time_seconds": 152.28,
+      "cost_usd": 0.012,
+      "response": "I can\u2019t give a verified percentage with a reliable citation based on the\nmodel outputs you provided.\n- **Why:** Claude and GPT both flag that exact percentages being quoted\n(e.g., \u201c~11%\u201d) are **not verifiable here** without a traceable, checkable\nsource.\n- **What this means for integration:** Gemini provides a specific figure\n(8.4% / 42 CEOs) and a purported *Fortune* article title, but **no other\nmodel corroborates that number or confirms the source**, so under your rules\nI can\u2019t include it as fact or cite it.\n**Actionable next step (to get a citable answer):**\nIf you share the exact link or publication details (URL/issue/date) for the\nclaimed *Fortune* \u201cWhere the Fortune 500 CEOs went to school (2023)\u201d piece\n(or another primary dataset), I can help you extract the count of HBS MBAs\nand compute the percentage cleanly (count \u00f7 500) with a citation you can\nverify.",
+      "scores": {
+        "style": 5,
+        "adversarial": 8,
+        "reasoning": 7
+      },
+      "error": null
+    },
+    {
+      "name": "single_claude",
+      "args": [
+        "--model",
+        "claude"
+      ],
+      "success": true,
+      "time_seconds": 8.29,
+      "cost_usd": 0.0,
+      "response": "I don't have a specific, reliable figure for the current percentage of\nFortune 500 CEOs with Harvard MBAs that I can cite with confidence.\nWhat I can tell you is that Harvard Business School has historically been\namong the top producers of Fortune 500 CEOs, often cited alongside other\nschools like Wharton, Stanford GSB, and Northwestern Kellogg. Various\nanalyses over the years have suggested Harvard MBA holders typically\nrepresent somewhere in the range of 5-10% of Fortune 500 CEOs, but this\nfluctuates annually.\nFor an accurate, current figure, I'd recommend checking:\n- Harvard Business School's own publications\n- Fortune magazine's annual CEO analyses\n- Research firms like Kittleman or Crist|Kolder's annual volatility reports\non CEO backgrounds\nI prefer not to cite a specific percentage without being able to verify the\nsource and recency of the data.",
+      "scores": {
+        "style": 6,
+        "adversarial": 8,
+        "reasoning": 7
+      },
+      "error": null
+    },
+    {
+      "name": "single_claude_rigor",
+      "args": [
+        "--model",
+        "claude",
+        "--rigor"
+      ],
+      "success": true,
+      "time_seconds": 9.92,
+      "cost_usd": 0.0,
+      "response": "**Honest answer: I don't have a reliable, citable figure for this.**\nWhat I can offer:\n**Plausible range based on partial data I've encountered:** Roughly 5-10% of\nFortune 500 CEOs hold Harvard MBAs at any given time, but I cannot cite a\nspecific source for this with confidence.\n**Why this is harder than it sounds:**\n- The Fortune 500 list changes annually\n- CEO turnover means the answer shifts year to year\n- Studies use different methodologies (current CEO vs. career path data)\n- Harvard itself publishes alumni achievement data, but with obvious\nselection bias in presentation\n**What would give you a reliable answer:**\n1. Harvard Business School's own alumni statistics (though verify their\nmethodology)\n2. Executive data services like Equilar or ExecuComp\n3. Annual analyses by outlets like *Bloomberg* or *Fortune* that track CEO\nbackgrounds\n**What I'm confident about:** Harvard MBAs are substantially overrepresented\namong Fortune 500 CEOs relative to their share of all MBA graduates\u2014but\n\"overrepresented\" is different from \"dominant.\"\nWould you like me to reason through what adjacent data points suggest, with\nexplicit uncertainty flags?",
+      "scores": {
+        "style": 6,
+        "adversarial": 9,
+        "reasoning": 8
+      },
+      "error": null
+    },
+    {
+      "name": "single_claude_cheap",
+      "args": [
+        "--model",
+        "claude",
+        "--cheap"
+      ],
+      "success": true,
+      "time_seconds": 4.33,
+      "cost_usd": 0.0,
+      "response": "# I don't have access to a current, reliable source for this specific\nstatistic.\nWhile Harvard Business School is prestigious and produces many corporate\nleaders, I'm not aware of a definitive, well-sourced figure for what\npercentage of Fortune 500 CEOs hold Harvard MBAs specifically.\n**What I'd suggest:**\n- Harvard Business School's own publications may have this data\n- The Fortune 500 list (from Fortune magazine) could be cross-referenced\nwith CEO biographical databases\n- Business school rankings publications sometimes report this information\nIf you need this figure for something important, I'd recommend checking\nHarvard Business School's official website or a recent business publication\nthat has analyzed this question, as the data does exist but I can't reliably\ncite it from memory.\nDo you know of a source you've seen this in? I'd be interested to know the\nactual figure.",
+      "scores": {
+        "style": 6,
+        "adversarial": 9,
+        "reasoning": 7
+      },
+      "error": null
+    },
+    {
+      "name": "single_claude_fast",
+      "args": [
+        "--model",
+        "claude",
+        "--fast"
+      ],
+      "success": true,
+      "time_seconds": 4.85,
+      "cost_usd": 0.0,
+      "response": "I don't have access to current data that would allow me to give you a\nprecise, citable percentage.\nHowever, I can point you toward sources that might have this information:\n1. **Harvard Business School itself** - HBS publishes data about their\nalumni in leadership positions\n2. **Fortune magazine** - They periodically analyze CEO backgrounds\n3. **Academic research** - Business school studies sometimes track CEO\neducational backgrounds\nWhat I can note is that Harvard MBA holders are significantly\noverrepresented among Fortune 500 CEOs relative to the general population,\nbut the exact percentage varies by year and methodology.\nIf you need a specific, cited figure, I'd recommend:\n- Checking HBS's official website or annual reports\n- Looking at recent Fortune articles on CEO education\n- Searching academic databases like JSTOR for peer-reviewed studies on this\ntopic\nWould you like help thinking through where to find this information?",
+      "scores": {
+        "style": 6,
+        "adversarial": 8,
+        "reasoning": 6
+      },
+      "error": null
+    }
+  ]
+}

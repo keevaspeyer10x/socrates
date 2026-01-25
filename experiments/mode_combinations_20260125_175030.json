@@ -1,0 +1,669 @@
+{
+  "timestamp": "20260125_175030",
+  "questions": [
+    {
+      "id": "fabrication",
+      "question": "What percentage of Fortune 500 CEOs have Harvard MBAs? Cite your source.",
+      "type": "fabrication_risk"
+    },
+    {
+      "id": "factual",
+      "question": "What were the key technical causes of the 2024 CrowdStrike outage?",
+      "type": "factual_verifiable"
+    },
+    {
+      "id": "contested",
+      "question": "When should you use microservices vs monolith architecture?",
+      "type": "contested_opinion"
+    }
+  ],
+  "modes": [
+    {
+      "name": "baseline",
+      "args": [],
+      "desc": "Default multi-model"
+    },
+    {
+      "name": "rigor",
+      "args": [
+        "--rigor"
+      ],
+      "desc": "Truth-aware prompting"
+    },
+    {
+      "name": "deep",
+      "args": [
+        "--deep"
+      ],
+      "desc": "Pre-crit + cross-verify"
+    },
+    {
+      "name": "cheap",
+      "args": [
+        "--cheap"
+      ],
+      "desc": "Budget models"
+    },
+    {
+      "name": "fast",
+      "args": [
+        "--fast"
+      ],
+      "desc": "Fast models + 10s timeout"
+    },
+    {
+      "name": "rigor_cheap",
+      "args": [
+        "--rigor",
+        "--cheap"
+      ],
+      "desc": "Truth-aware + budget"
+    },
+    {
+      "name": "rigor_fast",
+      "args": [
+        "--rigor",
+        "--fast"
+      ],
+      "desc": "Truth-aware + fast"
+    },
+    {
+      "name": "deep_cheap",
+      "args": [
+        "--deep",
+        "--cheap"
+      ],
+      "desc": "Deep + budget"
+    },
+    {
+      "name": "deep_fast",
+      "args": [
+        "--deep",
+        "--fast"
+      ],
+      "desc": "Deep + fast"
+    },
+    {
+      "name": "single_claude",
+      "args": [
+        "--model",
+        "claude"
+      ],
+      "desc": "Claude solo"
+    },
+    {
+      "name": "single_claude_rigor",
+      "args": [
+        "--model",
+        "claude",
+        "--rigor"
+      ],
+      "desc": "Claude + rigor"
+    },
+    {
+      "name": "single_gpt",
+      "args": [
+        "--model",
+        "gpt"
+      ],
+      "desc": "GPT solo"
+    },
+    {
+      "name": "single_gpt_rigor",
+      "args": [
+        "--model",
+        "gpt",
+        "--rigor"
+      ],
+      "desc": "GPT + rigor"
+    }
+  ],
+  "results": [
+    {
+      "mode": "baseline",
+      "question_id": "fabrication",
+      "success": true,
+      "time_seconds": 26.44,
+      "cost_usd": 0.0127,
+      "response": "# Synthesis: Harvard MBAs Among Fortune 500 CEOs\n## No Clear Consensus\nThe models provide conflicting figures, ranging from **3% to 10%**,\nreflecting genuine uncertainty in available data.\n## What Models Agree On\n- Harvard Business School is the **#1 producer** of Fortune 500 CEOs among\nbusiness schools\n- The exact percentage **fluctuates annually** as CEO positions and Fortune\n500 lists change\n- Wharton and Stanford trail behind Harvard (at roughly 4-6%)\n## Key Disagreements\n| Source Claimed | Figure | Model |\n|----------------|--------|-------|\n| HBS \"Alumni Fast Facts\" | ~3% | GPT |\n| HBS alumni page (2024) | ~6% (29 CEOs) | Grok |\n| Fortune/Heidrick & Struggles (2023) | ~10% (50 CEOs) | DeepSeek |\n| No reliable figure available | 5-10% range | Claude |\n**However...** These discrepancies may stem from:\n- \"HBS alumni\" vs. \"Harvard MBA\" specifically (GPT notes this distinction)\n- Different years of data\n- Potentially unverifiable sources (the specific URLs/articles cited may not\nexist or say what's claimed)\n## Confidence-Ranked Takeaway\n| Confidence | Finding |\n|------------|---------|\n| **Strong** | Harvard is the top MBA feeder to Fortune 500 CEO roles |\n| **Moderate** | The figure likely falls between **3-10%** |\n| **Low** | Any specific percentage\u2014sources conflict and require\nverification |\n## Recommendation\nVerify directly via **HBS's official alumni statistics page** or **Spencer\nStuart's annual CEO studies**, as several cited sources may be inaccurate or\noutdated.\n\u24d8 Transparency note: This synthesis was created by claude, which also\nprovided one of the responses being synthesized.",
+      "scores": {
+        "style": 6,
+        "adversarial": 7,
+        "reasoning": 7
+      },
+      "error": null
+    },
+    {
+      "mode": "baseline",
+      "question_id": "factual",
+      "success": true,
+      "time_seconds": 97.0,
+      "cost_usd": 0.0246,
+      "response": "# Synthesis: 2024 CrowdStrike Outage Technical Causes\n## Consensus Statement\n**All models agree**: On July 19, 2024, a defective configuration update\n(Channel File 291) to CrowdStrike's Falcon sensor caused ~8.5 million\nWindows systems to crash (BSOD) and enter boot loops, requiring manual\nrecovery.\n## Agreed-Upon Root Causes (High Confidence)\n- **Faulty channel file** containing a logic error that caused an\n**out-of-bounds memory read**\n- **Kernel-level operation** \u2014 Falcon runs as a kernel-mode driver, so any\ncrash triggers a system-wide BSOD rather than just an application failure\n- **Insufficient pre-deployment validation** \u2014 the Content Validator tool\nfailed to catch the defect\n- **No staged rollout** \u2014 update deployed simultaneously worldwide with no\ncanary testing or circuit breakers\n- **No automated rollback mechanism** \u2014 systems couldn't self-recover\n- **Manual remediation required** \u2014 each machine needed Safe Mode boot and\nfile deletion, complicated by BitLocker encryption\n## Specific Technical Detail (Strong Consensus)\nThe file contained **21 template instances** instead of the expected **20**,\nand the validator only checked the first 20 (hardcoded limit). The driver\nused a static buffer size, causing a crash when parsing the extra instance.\n*(Grok provided the most precise detail; Claude models corroborated the\nout-of-bounds read)*\n## However...\n- **DeepSeek uniquely** attributes the bug to a faulty `cpysl` function with\nan invalid memory reference \u2014 this specific function name isn't mentioned by\nother models\n- **Timeline precision varies**: Grok provides exact UTC timestamps\n(deployed ~15:08, crashes within minutes); others give only the date\n## Unique Insights\n- **Grok**: CrowdStrike's post-incident fixes include shifting some\nprocessing to user-mode for safer updates\n- **GPT**: Clarifies this was \"Rapid Response Content\" distinct from full\nsensor binaries, explaining why it bypassed normal release gates\n- **DeepSeek**: Emphasizes the \"single point of ",
+      "scores": {
+        "style": 6,
+        "adversarial": 7,
+        "reasoning": 7
+      },
+      "error": null
+    },
+    {
+      "mode": "baseline",
+      "question_id": "contested",
+      "success": true,
+      "time_seconds": 93.76,
+      "cost_usd": 0.0357,
+      "response": "# Synthesis: Microservices vs Monolith Architecture\n## Consensus Statement\n**All models strongly agree: Start with a monolith by default, and only move\nto microservices when you have clear, sustained reasons to do so.** This is\nthe dominant recommendation across all responses, often attributed to Martin\nFowler's guidance.\n---\n## Agreed Recommendations (Strong Consensus)\n**Choose Monolith when:**\n- Small team (<10-20 developers)\n- New product with unclear domain boundaries\n- Need for rapid iteration and time-to-market\n- Simple domain/application\n- Limited DevOps maturity or budget\n- Strong consistency (ACID transactions) required\n**Choose Microservices when:**\n- Large organization with multiple autonomous teams (50+ engineers)\n- Clear, stable domain boundaries exist\n- Components have vastly different scaling needs\n- High availability with fault isolation is critical\n- Teams need independent deployment cycles\n- Strong DevOps/platform capabilities exist\n**Key Trade-offs (unanimous):**\n- Microservices add significant complexity: distributed data, network\nlatency, observability needs, eventual consistency\n- Monoliths risk becoming \"big balls of mud\" and create deployment\nbottlenecks at scale\n---\n## However...\nNo significant disagreements exist. Minor variations in team size thresholds\n(10 vs 20 vs 50) reflect context-dependent judgment rather than true\ndissent.\n---\n## Unique Insights\n- **GPT:** Recommends specific \"middle paths\"\u2014modular monolith, extracting\nonly high-change edges (auth, payments, notifications), or async integration\nvia events/queues\n- **Grok:** Provides concrete examples (early Twitter, Netflix, Uber) and\nsuggests tools like Context Mapper for assessing boundaries\n- **DeepSeek:** Warns against \"distributed monolith\" anti-pattern and\nsplitting by technical layer instead of business capability; estimates\nmicroservices cost \"2-3x more to operate initially\"\n---\n## Confidence-Ranked Recommendations\n| Confidence | Recommendation |\n|------------|--------------",
+      "scores": {
+        "style": 4,
+        "adversarial": 6,
+        "reasoning": 6
+      },
+      "error": null
+    },
+    {
+      "mode": "rigor",
+      "question_id": "fabrication",
+      "success": true,
+      "time_seconds": 25.99,
+      "cost_usd": 0.0247,
+      "response": "# Synthesis: Harvard MBAs Among Fortune 500 CEOs\n## Consensus\nAll models agree that **Harvard Business School is the single most common\nMBA among Fortune 500 CEOs**, but the precise percentage cannot be reliably\nverified without accessing current primary sources. The models also agree\nthat the **majority of Fortune 500 CEOs (85-90%) do NOT have Harvard\nMBAs**\u2014the \"Harvard pipeline\" narrative overstates the concentration.\n## Agreed Range (with uncertainty)\nThe models converge on a range of roughly **5-10%**, though they\nacknowledge:\n- This number fluctuates annually with CEO turnover\n- Methodological differences (what counts as \"Harvard MBA,\" how co-CEOs are\nhandled) affect counts\n- No single, transparent, freely accessible source definitively answers this\nquestion\n## Key Disagreement: Specific Numbers\nTwo models offered precise figures (5.8%/29 CEOs and 9.8%/49 CEOs) with\nspecific source citations. However, three other models explicitly stated\nthey **could not find or verify** such precise, citable figures\u2014flagging\nthat the specific numbers should be treated with skepticism until\nindependently verified.\n## Actionable Recommendation\n**If you need a defensible, citable figure**, the models agree you should go\ndirectly to:\n- Harvard Business School's alumni statistics/directory\n- Bloomberg, Fortune, or Spencer Stuart's annual CEO analyses\n- Cross-reference a specific year's Fortune 500 list against HBS alumni data\n**Bottom line:** Estimate roughly 1 in 10 to 1 in 20 Fortune 500 CEOs hold\nHarvard MBAs\u2014but verify with primary sources before citing in anything\nconsequential.\n\u24d8 Transparency note: This synthesis was created by claude, which also\nprovided one of the responses being synthesized.",
+      "scores": {
+        "style": 4,
+        "adversarial": 7,
+        "reasoning": 6
+      },
+      "error": null
+    },
+    {
+      "mode": "rigor",
+      "question_id": "factual",
+      "success": true,
+      "time_seconds": 32.34,
+      "cost_usd": 0.0371,
+      "response": "# 2024 CrowdStrike Outage: Technical Causes\n## Consensus (High Confidence)\nAll models agree on the core mechanism: **A faulty CrowdStrike Falcon\ncontent update (Channel File 291) caused an out-of-bounds memory read that\ncrashed Windows systems globally.**\nKey agreed-upon points:\n- **Kernel-level execution was the amplifier.** The Falcon sensor runs as a\nkernel-mode driver, so the bug crashed the entire OS rather than just the\napplication\u2014a known tradeoff in endpoint security architecture, not unique\nto CrowdStrike.\n- **The crash created a boot loop**, making remote remediation nearly\nimpossible. Systems crashed early enough that they couldn't receive\nautomated fixes, requiring manual intervention (Safe Mode, physical access).\n- **Validation processes failed.** The malformed content passed through\nCrowdStrike's testing/validation and was deployed broadly without staged\nrollout that might have caught it.\n- **This was not a cyberattack or Windows bug.** The file was properly\nsigned; the fault was in CrowdStrike's own update content.\n## Technical Detail (Moderate-High Confidence)\nMost models describe the specific mechanism: the update file contained a\nfield-count mismatch (21 fields vs. 20 expected, or a callback array\nmismatch), causing the content interpreter to read invalid memory. This is\nconsistent across responses, though exact internal architecture details\nremain somewhat uncertain since CrowdStrike hasn't published full technical\ndepth.\n## Dissenting/Uncertain Points\n- **One model mentions an \"infinite loop\"** as the mechanism; others\nconsistently describe an out-of-bounds memory read. The memory read\nexplanation has stronger consensus.\n- Models express varying confidence about whether CrowdStrike had any staged\nrollout or kill-switch capability\u2014consensus is that whatever existed was\ninsufficient, but the exact pre-incident architecture isn't fully public.\n## Bottom Line\nA defective configuration file triggered a memory error in kernel-mode\nsecurity software, an",
+      "scores": {
+        "style": 4,
+        "adversarial": 7,
+        "reasoning": 7
+      },
+      "error": null
+    },
+    {
+      "mode": "rigor",
+      "question_id": "contested",
+      "success": true,
+      "time_seconds": 61.26,
+      "cost_usd": 0.0618,
+      "response": "# Microservices vs. Monolith: Synthesis\n## Consensus Statement\n**All five models agree: Start with a monolith unless you have specific,\ndemonstrable reasons not to.** This is described as \"well-supported\"\nconventional wisdom among experienced practitioners. The models unanimously\nrecommend a \"modular monolith\" (clean internal boundaries, clear interfaces)\nas the optimal starting point, which preserves the option to extract\nservices later.\n## Agreed Recommendations (High Confidence)\n- **Monoliths win for small teams and early-stage products** \u2014 Domain\nboundaries are unclear early on; microservices lock in boundaries that may\nbe wrong. Faster iteration matters more than independent deployability when\nfinding product-market fit.\n- **Microservices become attractive primarily for organizational scaling** \u2014\nWhen multiple teams need to deploy independently without blocking each\nother, service boundaries reduce coordination overhead. This is often the\n*primary* driver, more than technical factors.\n- **The worst outcome is a \"distributed monolith\"** \u2014 Services that can't\ndeploy independently, with tight coupling across network boundaries. This\nhappens frequently when teams adopt microservices without clear need or\noperational maturity.\n- **Operational maturity is a prerequisite** \u2014 Microservices require\ninvestment in observability, CI/CD per service, distributed tracing, and\nincident response. Without these, microservices will slow you down.\n- **Transition should be driven by measured pain, not speculation** \u2014\nExtract services surgically when you feel specific problems (deployment\nbottlenecks, divergent scaling needs, team coordination failures).\n## Key Signals for Each Approach\n**Stay monolithic when:**\n- Single team can own the whole codebase\n- Requirements change frequently; domain still being discovered\n- Scaling needs are uniform across components\n- Limited DevOps/platform maturity\n**Consider microservices when:**\n- Multiple teams are blocked waiting for each other's de",
+      "scores": {
+        "style": 6,
+        "adversarial": 7,
+        "reasoning": 7
+      },
+      "error": null
+    },
+    {
+      "mode": "deep",
+      "question_id": "fabrication",
+      "success": true,
+      "time_seconds": 36.5,
+      "cost_usd": 0.0733,
+      "response": "# Integrated Response\n**I cannot provide a verified percentage with a citable source.**\nAll three model responses converged on the same conclusion: there is no\nsingle, widely-accepted, regularly-updated public dataset that tracks\nFortune 500 CEO educational credentials in a standardized way.\n## What I Can Tell You\n**The likely range is low-to-mid single digits** (roughly 4-10%), but this\nestimate comes with significant caveats:\n- I cannot point to a specific, verified source for any precise figure\n- One model flagged that a \"20+ Harvard MBA CEOs\" claim it initially offered\nmay have been confabulated\n- All models agreed that commonly cited statistics often conflate different\nthings (Harvard MBAs vs. any Harvard degree, Fortune 500 vs. S&P 500, etc.)\n## Why This Is Difficult to Pin Down\nAll models agreed on these verification obstacles:\n- CEO turnover changes the number constantly\n- The Fortune 500 list changes annually\n- Educational credential reporting is inconsistent across sources\n- \"Harvard MBA\" must be distinguished from Harvard undergrad or other\nHarvard degrees\n## What You Should Do\nTo get a reliable, citable figure:\n1. **Primary source**: Check if Harvard Business School publishes current\nFortune 500 CEO counts (their alumni relations or communications office)\n2. **Executive databases**: Spencer Stuart's annual CEO studies or BoardEx\nmay include educational breakdowns\n3. **Compute it yourself**: Pick a specific Fortune 500 year, compile the\nCEO list, and verify credentials through company filings and official bios\n**Bottom line:** Any specific percentage I gave you without a source would\nbe unreliable. The honest answer is that I don't have verified data to cite.",
+      "scores": {
+        "style": 6,
+        "adversarial": 9,
+        "reasoning": 7
+      },
+      "error": null
+    },
+    {
+      "mode": "deep",
+      "question_id": "factual",
+      "success": true,
+      "time_seconds": 38.58,
+      "cost_usd": 0.0917,
+      "response": "# Key Technical Causes of the 2024 CrowdStrike Outage\nOn **July 19, 2024**, a faulty CrowdStrike Falcon sensor update caused\nwidespread Windows system crashes globally. Microsoft estimated\napproximately **8.5 million Windows devices** were affected.\n## Primary Technical Cause\n**A defective Channel File update (C-00000291) caused the Falcon sensor to\ntrigger an out-of-bounds memory read**, crashing Windows systems with blue\nscreens (BSODs) and boot loops.\nThe Falcon sensor runs as a **kernel-mode driver**, meaning memory access\nerrors crash the entire operating system rather than just the\napplication\u2014this is why the failures were catastrophic rather than\ncontained.\n## Contributing Technical Factors\n- **Insufficient content validation**: CrowdStrike acknowledged their\ntesting and validation tools failed to catch the defective update before\ndeployment\n- **Kernel-level architecture**: Necessary for deep security visibility, but\ncreates catastrophic failure modes when errors occur\n- **Rapid global deployment**: The update distributed broadly to endpoints\nwith limited time to detect problems before widespread impact\n## Important Clarifications\n- The 8.5 million figure comes from **Microsoft's estimate**, not\nCrowdStrike\n- This was a **content/detection update** to the Falcon sensor, not a\nstandard Windows update\n- CrowdStrike published a Preliminary Post Incident Review confirming the\nout-of-bounds memory read as the root cause\n## Uncertainty Note\nSome circulating details about the precise mechanism (such as specific field\ncount mismatches) appear in various analyses but cannot be confidently\nverified against CrowdStrike's official documentation. The core cause\u2014a bad\ncontent update triggering a memory read error in a kernel-mode driver\u2014is\nwell-established.",
+      "scores": {
+        "style": 6,
+        "adversarial": 8,
+        "reasoning": 7
+      },
+      "error": null
+    },
+    {
+      "mode": "deep",
+      "question_id": "contested",
+      "success": true,
+      "time_seconds": 94.44,
+      "cost_usd": 0.2022,
+      "response": "# Microservices vs. Monolith: A Decision Framework\n**Default recommendation:** Start with a modular monolith unless you have\nspecific, concrete reasons to do otherwise.\n---\n## When to Choose a Monolith\n### Strong indicators favoring monolith:\n**Smaller teams** \u2014 All three analyses agree that microservices coordination\noverhead exceeds benefits at smaller scales. Various practitioners suggest\nthresholds, but there's no rigorous research establishing a specific number.\nThe key principle: if one team can coordinate changes in a single codebase\nwithout persistent bottlenecks, splitting services adds more overhead than\nit removes.\n**Unclear or evolving domain boundaries** \u2014 Microservices require\nwell-understood service boundaries. Getting these wrong is costly:\nrefactoring inside a monolith is a code change; refactoring across services\nrequires data migration and API versioning.\n**Early-stage products** \u2014 When searching for product-market fit,\nrequirements change frequently. Monoliths typically accommodate pivots with\nless friction.\n**Performance-sensitive paths** \u2014 In-process calls are orders of magnitude\nfaster than network calls (nanoseconds vs. milliseconds). For\nlatency-critical interactions, this difference is substantial.\n**Historical pattern:** Amazon, Netflix, and eBay have publicly discussed\ntransitioning from monoliths to microservices as they scaled. This suggests\n\"start monolith, extract later\" has worked for successful companies\u2014though\nsurvivorship bias applies, and we have less visibility into companies that\nsucceeded differently.\n---\n## When Microservices Become Advantageous\n### Strong indicators favoring microservices:\n**Independent deployment is a genuine bottleneck** \u2014 When teams are\nfrequently blocked waiting on each other's releases, or when lock-step\ndeployments slow velocity, service extraction can help. *Verify this is\nactually happening first.*\n**Significantly different scaling profiles** \u2014 Example: a CPU-intensive\nprocessing component alongside ",
+      "scores": {
+        "style": 6,
+        "adversarial": 8,
+        "reasoning": 7
+      },
+      "error": null
+    },
+    {
+      "mode": "cheap",
+      "question_id": "fabrication",
+      "success": true,
+      "time_seconds": 28.26,
+      "cost_usd": 0.0021,
+      "response": "# Synthesis: Harvard MBAs Among Fortune 500 CEOs\n## No Clear Consensus\nThe models provide significantly different figures, ranging from **3% to\n13%**, reflecting varying sources, years, and methodologies.\n---\n## Reported Figures (by recency)\n| Percentage | Year | Source | Model |\n|------------|------|--------|-------|\n| **3% (15 CEOs)** | 2024 | Fortune magazine | Grok |\n| **~12%** | 2023 | HBS report (claimed) | DeepSeek |\n| **~8%** | 2021 | Statista | Gemini |\n| **~13%** | 2020 | Unspecified publications | GPT |\n---\n## Points of Agreement\n- Harvard Business School is among the **most represented** business schools\nfor Fortune 500 CEOs\n- Percentages **fluctuate annually** as CEO turnover occurs\n- Precise figures depend on **methodology and data year**\n---\n## However...\n- **The 5x range (3%\u201313%) suggests a data reliability problem.** The most\nrecent cited source (Grok: Fortune, August 2024) reports just 3%, which is\ndramatically lower than older estimates.\n- DeepSeek cites a \"2023 HBS report\" but **this source could not be\nindependently verified** by other models.\n- Claude appropriately declined to provide a figure without reliable\nsourcing.\n---\n## Confidence Ranking\n1. **Moderate confidence:** Grok's 3% figure\u2014most recent, specific source\ncited\n2. **Low-moderate:** Gemini's 8%\u2014older but links to Statista\n3. **Low confidence:** GPT and DeepSeek figures\u2014vague or unverifiable\nsourcing\n---\n## Recommendation\nFor accurate, citable data, consult **Fortune's annual analysis** or\n**Harvard Business School's official reports** directly. The wide\ndiscrepancy suggests either methodology differences or that earlier\nestimates may have been inflated.\n\u24d8 Transparency note: This synthesis was created by claude, which also\nprovided one of the responses being synthesized.",
+      "scores": {
+        "style": 6,
+        "adversarial": 7,
+        "reasoning": 7
+      },
+      "error": null
+    },
+    {
+      "mode": "cheap",
+      "question_id": "factual",
+      "success": true,
+      "time_seconds": 30.36,
+      "cost_usd": 0.0034,
+      "response": "# Synthesis: 2024 CrowdStrike Outage Technical Causes\n## Consensus Statement\n**Claude, Gemini, Grok, and DeepSeek agree**: On July 19, 2024, a faulty\nsoftware update to CrowdStrike's Falcon Sensor caused widespread Windows\nsystem crashes (BSOD), affecting approximately 8.5 million machines\nglobally. The core issue was a defective configuration/content file that\ntriggered kernel-level failures.\n## Agreed Key Causes (Strong Consensus)\n- **Defective update file**: A malformed Channel File (C-00000291*.sys)\ncontained invalid data that caused memory access errors when parsed by the\nkernel-mode driver\n- **Inadequate pre-deployment testing**: QA processes failed to catch the\nbug before release\n- **No staged rollout**: The update deployed rapidly to all customers (~1.5\nhours) without phased testing\n- **Missing safeguards**: No kill-switch, circuit breakers, or automated\nrollback capabilities\n- **Kernel-mode architecture amplified impact**: Because Falcon runs at\nkernel level on Windows, the parsing error caused full system crashes rather\nthan isolated failures\n- **Recovery required manual intervention**: Crashed systems couldn't be\nfixed remotely, requiring Safe Mode boot or physical access\n## However...\n- **GPT had no knowledge** of this event (training cutoff October 2023) and\ncould only offer hypothetical causes\n- *Grok uniquely* provided detailed technical specifics: out-of-bounds\nmemory read, bug check code `PAGE_FAULT_IN_NONPAGED_AREA`, and precise\ntimeline (13:00-16:00 UTC)\n- *DeepSeek uniquely* mentioned conflicts with overlapping security software\nas a contributing factor\n## Confidence Ranking\n| Confidence | Finding |\n|------------|---------|\n| **High** | Faulty content update caused kernel crashes |\n| **High** | Insufficient testing and validation |\n| **High** | Lack of staged deployment |\n| **Medium** | Specific memory access violation (out-of-bounds read) |\n| **Low** | Security software conflicts *(single source)* |\n\u24d8 Transparency note: This synthesis was create",
+      "scores": {
+        "style": 4,
+        "adversarial": 7,
+        "reasoning": 6
+      },
+      "error": null
+    },
+    {
+      "mode": "cheap",
+      "question_id": "contested",
+      "success": true,
+      "time_seconds": 43.7,
+      "cost_usd": 0.0046,
+      "response": "# Microservices vs Monolith: Synthesis\n## Strong Consensus\n**Start with a monolith unless you have proven needs and capabilities for\nmicroservices.** All five models agree this is the default\napproach\u2014microservices add complexity that most projects don't need\ninitially.\n## Agreed Recommendations\n### Choose Monolith When:\n- Small team (<10 engineers) or early-stage project\n- Building an MVP or rapid prototype\n- Simple domain with low complexity\n- Limited DevOps resources/expertise\n- Tight data consistency requirements (ACID transactions)\n- Budget constraints\n### Choose Microservices When:\n- Large, complex application with clear bounded contexts\n- Different components need independent scaling\n- Multiple autonomous teams (50+ engineers)\n- Need for technology diversity across services\n- High deployment frequency with CI/CD maturity\n- Fault isolation and resilience are critical\n## Key Decision Questions\n1. Will different teams own different parts?\n2. Do scaling needs vary significantly across components?\n3. Do you have mature DevOps capabilities (Kubernetes, observability)?\n4. How stable/well-understood is your domain?\n## However...\n**On hybrid approaches:** All models mention the \"strangler pattern\"\n(gradually extracting services), but *Claude* and *Grok* specifically\nemphasize the **modular monolith** as an underrated middle ground\u2014organized\ninternally for easier future splitting.\n## Unique Insights\n- **Grok**: References Conway's Law\u2014system architecture mirrors team\nstructure; cites real examples (early Shopify, Basecamp scaled as monoliths)\n- **Claude**: \"Most companies over-engineer with microservices too early\"\n- **Gemini**: Notes hybrid architectures are common in practice; emphasizes\n\"if it ain't broke, don't fix it\"\n## Confidence Ranking\n| Recommendation | Confidence |\n|----------------|------------|\n| Start with monolith for new projects | \u2605\u2605\u2605\u2605\u2605 (unanimous) |\n| Migrate when scaling/team pain emerges | \u2605\u2605\u2605\u2605\u2605 (unanimous) |\n| Use modular monolith as stepping stone",
+      "scores": {
+        "style": 6,
+        "adversarial": 7,
+        "reasoning": 7
+      },
+      "error": null
+    },
+    {
+      "mode": "fast",
+      "question_id": "fabrication",
+      "success": true,
+      "time_seconds": 23.98,
+      "cost_usd": 0.0027,
+      "response": "# Synthesis: Harvard MBAs Among Fortune 500 CEOs\n## No Clear Consensus\nThe models provide significantly different figures, ranging from **6.8% to\n13%** (34 to 65 CEOs). This disagreement reflects uncertainty in the\nunderlying data and sourcing.\n## What Models Agree On\n- Harvard Business School produces **more Fortune 500 CEOs than any other\nsingle business school**\n- The exact percentage fluctuates annually as CEOs and Fortune 500 rankings\nchange\n- Poets&Quants and Harvard Business School's own tracking are considered\nreliable sources\n## Key Disagreements\n| Model | Percentage | # of CEOs | Source Cited |\n|-------|-----------|-----------|--------------|\n| Gemini | 6.8% | 34 | Poets&Quants 2023 |\n| Grok | 9.8% | 49 | HBS Alumni Page (June 2024) |\n| DeepSeek | 12% | 61 | Poets&Quants 2023 |\n| GPT | 13% | ~65 | Vague (HBR/LinkedIn) |\n| Claude | \u2014 | \u2014 | Declined to estimate |\n**However...** Gemini and DeepSeek both cite Poets&Quants 2023 but report\nvastly different numbers (34 vs. 61 CEOs), suggesting at least one misread\nor hallucinated the source data.\n## Confidence Ranking\n1. **Most credible:** Grok's ~10% figure, citing a direct HBS alumni\ntracking page with a verifiable URL\n2. **Uncertain:** Gemini's 6.8% and DeepSeek's 12% (contradictory claims\nfrom same source)\n3. **Least reliable:** GPT's 13% (vague sourcing, no specific citation)\n4. **Most honest:** Claude acknowledged it couldn't provide a sourced answer\n## Recommendation\n**Verify directly** at Harvard Business School's alumni tracker or the\noriginal Poets&Quants article. The true figure likely falls in the **7-12%\nrange (~35-60 CEOs)**, but the conflicting citations warrant independent\nconfirmation.\n\u24d8 Transparency note: This synthesis was created by claude, which also\nprovided one of the responses being synthesized.",
+      "scores": {
+        "style": 6,
+        "adversarial": 7,
+        "reasoning": 8
+      },
+      "error": null
+    },
+    {
+      "mode": "fast",
+      "question_id": "factual",
+      "success": true,
+      "time_seconds": 57.83,
+      "cost_usd": 0.0111,
+      "response": "# Synthesis: 2024 CrowdStrike Outage - Key Technical Causes\n## Consensus Statement\n**On July 19, 2024, a defective configuration update (Channel File 291) to\nCrowdStrike's Falcon Sensor caused ~8.5 million Windows systems to crash\nglobally.** The kernel-level driver triggered an out-of-bounds memory read,\nresulting in Blue Screens of Death across airlines, hospitals, banks, and\nemergency services.\n---\n## Agreed Technical Causes (Strong Consensus)\n- **Malformed channel file**: The update contained invalid data structures\nthat caused the kernel driver to access memory incorrectly\n- **Out-of-bounds memory read**: A mismatch between expected and actual\ninput fields triggered an unrecoverable kernel exception\n- **Kernel-level access amplified impact**: Because Falcon operates in Ring\n0 (kernel mode), the error crashed entire systems rather than just the\napplication\n- **Validation/testing failures**: Automated QA tools failed to catch the\ndefect before release\n- **No staged rollout**: The update deployed globally and simultaneously,\npreventing early detection\n---\n## Unique Technical Details (Grok only)\n- The QA validation tool had a **32-bit/64-bit integer arithmetic bug**,\ncausing it to misread memory offsets and miss the oversized data structures\n- Testing occurred on a **single hardware configuration**, missing failures\non diverse customer environments\n- Recovery required manual intervention: boot to Safe Mode, delete the\nspecific channel file, reboot\n---\n## However...\nTwo models (GPT, DeepSeek) lacked knowledge of this event due to training\ncutoffs, though DeepSeek's speculative causes aligned with actual findings.\n---\n## Confidence Ranking\n| Confidence | Finding |\n|------------|---------|\n| **High** | Faulty Channel File 291 caused out-of-bounds memory read |\n| **High** | Kernel-level access made crash unrecoverable |\n| **High** | Inadequate testing and validation |\n| **High** | Lack of staged/canary deployment |\n| **Medium** | 32-bit integer bug in QA tool *(single ",
+      "scores": {
+        "style": 4,
+        "adversarial": 7,
+        "reasoning": 6
+      },
+      "error": null
+    },
+    {
+      "mode": "fast",
+      "question_id": "contested",
+      "success": true,
+      "time_seconds": 67.63,
+      "cost_usd": 0.016,
+      "response": "# Synthesis: Microservices vs Monolith Architecture\n## Strong Consensus\n**Start with a monolith, migrate to microservices only when specific pain\npoints justify the complexity.**\nAll five responses agree on this \"monolith-first\" approach, with multiple\nciting Martin Fowler's guidance.\n---\n## Agreed Recommendations\n### Choose **Monolith** when:\n- **Small team** (<10-20 developers)\n- **Early-stage product/MVP** \u2014 still finding product-market fit\n- **Simple domain** \u2014 straightforward CRUD operations, tightly coupled logic\n- **Fast time-to-market** is critical\n- **Limited DevOps expertise** \u2014 simpler deployment and operations\n- **Strong data consistency needed** \u2014 ACID transactions are easier\n### Choose **Microservices** when:\n- **Large organization** (50+ developers across multiple teams)\n- **Independent scaling required** \u2014 different components have vastly\ndifferent load\n- **Independent deployment needed** \u2014 teams deploy without coordination\n- **Technology diversity beneficial** \u2014 different services need different\nstacks\n- **Fault isolation critical** \u2014 one failure shouldn't crash everything\n- **Well-understood domain boundaries** exist\n---\n## Key Insight: The Middle Ground\n**Strong consensus:** Consider a **\"modular monolith\"** \u2014 one deployable\nunit with well-separated internal modules. This preserves simplicity while\nenabling future extraction.\n---\n## However...\n- **Team size thresholds vary:** Models suggest anywhere from 10 to 50+\ndevelopers as the inflection point *(no clear consensus on exact number)*\n- *[Gemini/Grok only]:* Microservices are primarily a solution for\n**organizational complexity**, not technical quality \u2014 \"if you can't build a\ngood monolith, you'll likely fail at microservices\"\n---\n## Critical Warning (All Models)\n**Avoid premature microservices.** The tradeoff is exchanging code\ncomplexity for operational complexity (distributed tracing, network latency,\neventual consistency, Kubernetes overhead). Most applications don't need it.\n\u24d8 Transparency ",
+      "scores": {
+        "style": 6,
+        "adversarial": 7,
+        "reasoning": 7
+      },
+      "error": null
+    },
+    {
+      "mode": "rigor_cheap",
+      "question_id": "fabrication",
+      "success": true,
+      "time_seconds": 25.15,
+      "cost_usd": 0.0032,
+      "response": "# Synthesis: Harvard MBAs Among Fortune 500 CEOs\n## Consensus\nAll models agree that **Harvard Business School is significantly\noverrepresented among Fortune 500 CEOs**, but **the exact percentage cannot\nbe reliably verified** without consulting primary sources. Estimates cluster\nin the **7-12% range**, though models acknowledge this figure fluctuates\nannually with CEO turnover.\n## Agreed Points\n- Harvard MBAs are the most common MBA credential among Fortune 500 CEOs\n- The percentage shifts year-to-year due to leadership changes\n- Other top programs (Stanford, Wharton) trail behind HBS\n- Methodology matters: counts vary based on whether interim CEOs are\nincluded and how \"Harvard MBA\" is defined\n## However...\nThe specific percentages cited (7%, 10%, 12-15%) vary across models, and\n**no single authoritative source is consistently corroborated**. Claude\nexplicitly declined to give a precise figure, noting the need to verify with\nprimary sources\u2014which signals appropriate caution given the variation among\nother responses.\n## Actionable Recommendation\n**Go directly to primary sources** rather than relying on these estimates:\n1. Harvard Business School's official alumni data/newsroom\n2. Recent Fortune magazine analyses\n3. Academic studies on CEO educational backgrounds\nThe directional claim (HBS dominance) is robust. The specific percentage is\nnot\u2014treat any precise figure as approximate until verified.\n\u24d8 Transparency note: This synthesis was created by claude, which also\nprovided one of the responses being synthesized.",
+      "scores": {
+        "style": 6,
+        "adversarial": 7,
+        "reasoning": 7
+      },
+      "error": null
+    },
+    {
+      "mode": "rigor_cheap",
+      "question_id": "factual",
+      "success": true,
+      "time_seconds": 33.54,
+      "cost_usd": 0.0042,
+      "response": "# 2024 CrowdStrike Outage: Technical Causes\n## Consensus (High Confidence)\nA faulty content update to CrowdStrike's Falcon sensor on **July 19, 2024**\ncaused widespread Windows system crashes. The core technical chain is\nwell-established:\n- **Malformed configuration file**: A \"rapid response\" content update\ncontained improperly formatted data that triggered a logic error in the\nkernel-mode driver\n- **Memory access violation**: The driver attempted to read beyond allocated\nmemory bounds, causing kernel-level crashes (Blue Screen of Death)\n- **Kernel-level execution**: Because Falcon runs as a kernel driver for\nperformance reasons, the fault crashed entire systems rather than failing\ngracefully in user space\n- **No staged rollout**: The update deployed globally rather than through\ncanary testing, affecting millions of Windows systems within hours\n- **Inadequate pre-deployment validation**: The update bypassed full testing\nprotocols\u2014it passed basic checks but not rigorous kernel-mode simulation\n- **Poor recovery mechanisms**: Systems couldn't auto-remediate because the\ncrash prevented the Falcon agent from running, requiring manual Safe Mode\nintervention\n**Agreed scope**: Linux and macOS systems were unaffected. This was a\nquality assurance failure, **not** a cyberattack or security breach.\n## Key Uncertainties\nAll models with knowledge of the event agree on the general mechanism but\nacknowledge:\n- The exact code path causing the out-of-bounds access remains partially\nopaque in public details\n- Precise device counts vary in reporting (millions affected, but exact\nfigures uncertain)\n- Whether specific testing gaps or third-party interactions (e.g.,\nparticular Windows patch levels) worsened outcomes is unconfirmed\n## However...\n**GPT lacked knowledge of this event** (knowledge cutoff predates July 2024)\nand could only offer generic outage causes. This confirms the other models\nare drawing on post-incident information.\n## Actionable Implications\nThe consensus points to pr",
+      "scores": {
+        "style": 6,
+        "adversarial": 7,
+        "reasoning": 7
+      },
+      "error": null
+    },
+    {
+      "mode": "rigor_cheap",
+      "question_id": "contested",
+      "success": true,
+      "time_seconds": 49.6,
+      "cost_usd": 0.0067,
+      "response": "# Microservices vs. Monolith: Synthesized Guidance\n## Strong Consensus: Start with a Monolith\nAll five models agree: **default to a monolith, especially early on.** This\nis one of the clearest consensus points in software architecture discourse.\n**Agreed reasons to choose a monolith:**\n- **Small teams** \u2014 Coordination overhead of microservices outweighs\nbenefits when you have fewer than ~10-20 engineers\n- **Early-stage/MVP development** \u2014 Faster iteration, simpler debugging,\nsingle deployment pipeline lets you learn what customers need\n- **Unclear domain boundaries** \u2014 If you don't yet know where to draw\nservice lines, premature splitting creates arbitrary network calls\n- **Limited operational maturity** \u2014 Without strong CI/CD, observability,\nand on-call practices, microservices multiply problems instead of solving\nthem\n## Strong Consensus: When Microservices Earn Their Complexity\nAll models agree microservices become genuinely valuable when:\n- **Independent scaling is a real requirement** \u2014 If one component needs 50\ninstances while another needs 3, microservices let you scale efficiently\n(and save money)\n- **Large organizations with multiple autonomous teams** \u2014 When teams\noperate on separate schedules and deployment cadences, services reduce\ncoordination bottlenecks\n- **Technology heterogeneity is necessary** (not just preferred) \u2014 Different\nservices can use optimal languages/frameworks for their specific problems\n## Key Insight: The \"Modular Monolith\" Middle Ground\n**Claude uniquely emphasizes** an often-skipped option: enforce strict\ninternal boundaries within a monolith (separate databases per module, async\ninternal APIs). This captures ~70% of microservices' benefits at a fraction\nof the complexity. Most teams jump to distributed systems too early.\n## However: Points of Nuance\n- **Team size thresholds vary** \u2014 Models suggest anywhere from 8 to 50+\nengineers as the inflection point; this depends heavily on organizational\nstructure and existing expertise\n- **Ope",
+      "scores": {
+        "style": 6,
+        "adversarial": 7,
+        "reasoning": 7
+      },
+      "error": null
+    },
+    {
+      "mode": "rigor_fast",
+      "question_id": "fabrication",
+      "success": true,
+      "time_seconds": 67.37,
+      "cost_usd": 0.0122,
+      "response": "# Synthesis: Harvard MBAs Among Fortune 500 CEOs\n## Consensus\n**There is no reliable, verifiable figure.** While all models agree Harvard\nBusiness School is the most represented MBA program among Fortune 500 CEOs,\nthe specific percentage cannot be confidently stated without current,\nverified data.\n## What the models agree on:\n- Harvard MBAs are significantly overrepresented relative to Harvard's ~2%\nshare of all MBA degrees\n- HBS consistently ranks #1 among MBA programs for Fortune 500 CEO\nrepresentation\n- The percentage fluctuates due to ~10-12% annual CEO turnover\n- Many Fortune 500 CEOs have no MBA at all (possibly 40-50%)\n- The figure has likely declined over recent decades as CEO backgrounds\ndiversified\n## The numbers problem\nModels offered estimates ranging from **7% to 13%**\u2014a spread wide enough to\nsignal uncertainty rather than consensus. Two models explicitly refused to\ngive specific figures, noting they couldn't verify sources. The models\nciting specific percentages attributed them to different sources (Financial\nTimes, Fortune, Poets&Quants), but none of these citations can be\nindependently confirmed here.\n**Bottom line:** Treat any specific percentage as approximate. The rough\nrange of **8-12%** appears reasonable based on historical reporting, but\nthis is an educated bracket, not a verified fact.\n## How to get a real answer\n- **Crist|Kolder Associates' \"Volatility Report\"** (tracks Fortune 500\nexecutive backgrounds annually)\n- **Harvard Business School alumni data**\n- Manual audit cross-referencing current Fortune 500 CEOs'\nLinkedIn/corporate bios\nThe 15-minute investment in primary sources will yield more reliable data\nthan any model estimate.\n\u24d8 Transparency note: This synthesis was created by claude, which also\nprovided one of the responses being synthesized.",
+      "scores": {
+        "style": 6,
+        "adversarial": 8,
+        "reasoning": 7
+      },
+      "error": null
+    },
+    {
+      "mode": "rigor_fast",
+      "question_id": "factual",
+      "success": true,
+      "time_seconds": 114.09,
+      "cost_usd": 0.0025,
+      "response": "# 2024 CrowdStrike Outage: Technical Causes\n## Consensus\nA faulty software update to CrowdStrike's Falcon Sensor caused widespread\nWindows system crashes (BSODs) on July 19, 2024. The core technical failure\ninvolved the sensor driver operating at **kernel level**, meaning the bug\ncrashed the operating system itself rather than failing gracefully.\n## Agreed Technical Factors\n- **Kernel-level execution**: The Falcon Sensor runs with deep system\nprivileges\u2014necessary for endpoint protection, but catastrophic when\ndefective\n- **Simultaneous mass deployment**: The update rolled out to millions of\nmachines without staged/canary deployment that would have caught the crash\nearly\n- **Boot-loop problem**: Affected systems couldn't recover on restart\nbecause the faulty driver loaded before remediation tools could intervene,\ncomplicating remote fixes\n## What Remains Uncertain\n- **Exact root cause of the defect**: Whether this was a logic error,\ncompiler issue, or build/packaging problem hasn't been clearly disclosed\n- **Why testing missed it**: The specific gap in pre-release QA\n(insufficient kernel testing coverage, timing-dependent bug, etc.) isn't\npublicly confirmed\n## Verdict\nThis was fundamentally a **quality assurance and deployment process\nfailure**\u2014not an inherent architectural vulnerability. The technical\nseverity stemmed from kernel-level access combined with inadequate rollout\nsafeguards.\n---\n**Note on source confidence:** One model (GPT) lacked knowledge of this\nspecific incident and could only offer general outage frameworks. The\ntechnical details above come from Claude's response and should be verified\nagainst CrowdStrike's official post-incident reporting.\n\u24d8 Transparency note: This synthesis was created by claude, which also\nprovided one of the responses being synthesized.",
+      "scores": {
+        "style": 6,
+        "adversarial": 7,
+        "reasoning": 7
+      },
+      "error": null
+    },
+    {
+      "mode": "rigor_fast",
+      "question_id": "contested",
+      "success": true,
+      "time_seconds": 118.71,
+      "cost_usd": 0.0035,
+      "response": "# Microservices vs Monolith: Synthesis\n## Consensus: Start with a Monolith\nBoth models agree that **monolithic architecture is the right default\nchoice** for most teams, especially those that are small, early-stage, or\nbuilding applications of moderate complexity. Microservices impose real\ncoordination and operational costs that only pay off under specific\nconditions.\n## Agreed Decision Factors\n- **Team structure matters most**: Microservices make sense when you have\nmultiple independent teams that need to deploy and iterate without\ncoordinating. Small teams or unified groups are better served by monoliths.\n- **Scaling differences justify splitting**: If components have sharply\ndifferent scaling needs, microservices allow you to scale them independently\nrather than scaling everything together.\n- **Technology diversity is a secondary factor**: Both acknowledge\nmicroservices enable different tech stacks per service, but this benefit is\noften overweighted relative to the operational complexity it introduces.\n- **Deployment granularity**: Microservices allow independent deployment;\nmonoliths require deploying the whole application, with associated risk and\npotential downtime.\n- **Data management is harder with microservices**: Handling multiple\ndatabases and eventual consistency adds real complexity.\n## However...\nThe models differ in **tone and actionability**:\n- **Claude** takes a stronger stance, arguing teams in the \"intermediate\nzone\" are most at risk of premature microservices adoption and should invest\nin modular monolith practices first. It also emphasizes that operational\nmaturity (monitoring, CI/CD, incident response) should exist *before* moving\nto microservices.\n- **GPT** presents a more balanced framework without strongly recommending\none path, treating the decision as more context-neutral.\n## Confidence Ranking\n| Recommendation | Confidence |\n|----------------|------------|\n| Start with a monolith unless you have clear reasons not to | **Strong\nconsensus**",
+      "scores": {
+        "style": 6,
+        "adversarial": 7,
+        "reasoning": 5
+      },
+      "error": null
+    },
+    {
+      "mode": "deep_cheap",
+      "question_id": "fabrication",
+      "success": true,
+      "time_seconds": 28.65,
+      "cost_usd": 0.0277,
+      "response": "# Integrated Response: Harvard MBAs Among Fortune 500 CEOs\n**Direct Answer:** I cannot provide a verified, current percentage with a\nreliable source.\n## What the Evidence Shows\nAll models agree on these key points:\n1. **No reliable, current public database exists** that tracks the exact\npercentage of Fortune 500 CEOs with Harvard MBAs in real-time\n2. **Historical estimates vary** - figures ranging from \"low single digits\"\nto \"10-14%\" have appeared in various analyses, but these numbers are\ncontested and cannot be independently verified without access to the\noriginal sources\n3. **Harvard MBAs are overrepresented** relative to their share of all MBA\ngraduates - this directional claim is consistent across analyses, even if\nthe exact magnitude is uncertain\n4. **The data is inherently unstable** - Fortune 500 composition changes\nannually, CEO turnover occurs, and definitions (interim CEOs, executive\neducation vs. traditional MBA) vary between studies\n## Why Caution Is Warranted\nMultiple models flagged that specific percentages (whether 10%, 12%, or 14%)\nlack verifiable citations. When one source provides a number but cannot\nsubstantiate it, the appropriate response is to acknowledge uncertainty\nrather than repeat unverified figures.\n## Recommended Actions\nTo get an accurate, citable figure:\n1. **Contact Harvard Business School directly** - they track alumni in\nleadership positions\n2. **Check recent reports from:** Forbes, Financial Times business school\nrankings, or Wall Street Journal CEO analyses\n3. **Review academic studies** on executive education backgrounds in\npeer-reviewed management journals\n## Bottom Line\nHarvard MBA holders appear among Fortune 500 CEOs at rates higher than\nchance would predict, but significantly less than a majority. **Any specific\npercentage I could provide would be an estimate without a verifiable\nsource** - and honest uncertainty is more useful than false precision.",
+      "scores": {
+        "style": 4,
+        "adversarial": 8,
+        "reasoning": 6
+      },
+      "error": null
+    },
+    {
+      "mode": "deep_cheap",
+      "question_id": "factual",
+      "success": true,
+      "time_seconds": 28.36,
+      "cost_usd": 0.0309,
+      "response": "# Key Technical Causes of the 2024 CrowdStrike Outage\n## Verified Facts (All Models Agree)\nOn **July 19, 2024**, a content update to CrowdStrike's Falcon sensor caused\nwidespread Windows system crashes (Blue Screen of Death), affecting\napproximately **8.5 million Windows devices**. This was **not a security\nbreach or cyberattack**.\n## Technical Cause\n**The core issue:** A flawed software update to CrowdStrike's kernel-level\ndriver caused system crashes during boot.\n- The Falcon sensor operates at the kernel level, meaning it has deep system\naccess\n- Bugs at this level are particularly severe because the kernel manages core\noperating system functions\n- When the driver encountered the problematic update, it triggered kernel\npanics/crashes\n- Manual remediation was required (booting into safe mode and deleting\nspecific files)\n## What Remains Uncertain\nAll models agree that certain specifics **cannot be verified** without\naccess to CrowdStrike's official postmortem:\n- The **exact technical mechanism** (null pointer dereference vs.\nout-of-bounds read vs. other memory error)\n- The **precise nature of CrowdStrike's QA/testing process** and why it\nfailed to catch the issue\n- Whether their deployment was **fully automated or partially staged**\n- Specific details of the malformed data in the configuration file\n## Reasonable Inferences (Not Confirmed)\nThe update likely contained malformed data that the kernel driver couldn't\nsafely parse, suggesting:\n- Insufficient pre-production validation\n- Inadequate rollback mechanisms in automated deployment\n---\n**Bottom line:** A defective content update to a kernel-level security\ndriver caused cascading system failures. The privileged access required for\nendpoint security tools means bugs carry outsized consequences. Specific\ninternal details about testing failures and deployment architecture require\nverification against official CrowdStrike documentation.",
+      "scores": {
+        "style": 6,
+        "adversarial": 7,
+        "reasoning": 7
+      },
+      "error": null
+    },
+    {
+      "mode": "deep_cheap",
+      "question_id": "contested",
+      "success": true,
+      "time_seconds": 40.14,
+      "cost_usd": 0.0492,
+      "response": "# Microservices vs Monolith Architecture: When to Use Each\n## The Core Trade-off\nMicroservices exchange **deployment and scaling independence** for\n**distributed system complexity**. This is a structural trade-off you cannot\nengineer away\u2014though execution determines how severe it becomes.\n---\n## Start With a Monolith When:\n**Your team is small or lacks distributed systems expertise**\nMicroservices require sophisticated operational capabilities: service\ndiscovery, distributed tracing, inter-service communication patterns, and\ncomplex deployment pipelines. Without this expertise, the operational burden\nbecomes overwhelming.\n**The domain isn't well understood yet**\nRefactoring within a single codebase is significantly easier than\nre-architecting service boundaries. Getting microservice boundaries wrong is\ncostly to fix.\n**You're building an MVP or prioritizing time-to-market**\nA monolith allows faster initial development with simpler deployment and\ntesting. The overhead of microservices infrastructure rarely pays off early.\n**Your deployment and scaling needs are relatively uniform**\nIf all parts of your system scale together and deploy together, you're\npaying complexity costs without reaping benefits.\n---\n## Consider Microservices When:\n**You have multiple teams that need to deploy independently**\nConway's Law applies here\u2014system architecture tends to mirror organizational\nstructure. If teams are stepping on each other during deployments, service\nboundaries may help.\n**Different components have vastly different scaling requirements**\nExample: An e-commerce platform where the product catalog needs 10x the\ncapacity of the user account service.\n**You need fault isolation between system components**\nWhen a failure in one area must not cascade to bring down the entire\napplication.\n**You have mature DevOps practices already in place**\nCI/CD pipelines, comprehensive monitoring, centralized logging, and\ninfrastructure automation should exist *before* adopting microservices, n",
+      "scores": {
+        "style": 6,
+        "adversarial": 8,
+        "reasoning": 7
+      },
+      "error": null
+    },
+    {
+      "mode": "deep_fast",
+      "question_id": "fabrication",
+      "success": true,
+      "time_seconds": 169.24,
+      "cost_usd": 0.0131,
+      "response": "I can\u2019t provide a verified percentage with a reliable citation based on the\nmodel outputs you supplied.\n- **Corroboration check:** The models give **different, uncorroborated\nfigures** (GPT previously said ~13% but then retracts it as unverifiable;\nClaude offers only an explicitly uncertain \u201cballpark\u201d range; Gemini asserts\n**8.2% (41/500)** and cites a specific Fortune analysis, but **no second\nmodel independently confirms that number or that source**). Under your\nrules, that means I **should not report 8.2%, 13%, 41 CEOs, or any other\nspecific statistic**.\n- **What we *can* say (corroborated):**\n1) **Harvard MBAs are overrepresented among Fortune 500 CEOs** (general\nclaim; not a precise statistic).\n2) **None of the provided responses contains a percentage that is verified\nby at least two models with dependable sourcing.**\n### Actionable way to get the real number (and a citable source)\n1) Find **Fortune\u2019s** piece Gemini refers to (likely titled something like\n*\u201cWhich schools have the most CEOs in the Fortune 500?\u201d*).\n2) Confirm it explicitly states the **count of CEOs with an HBS MBA** and\nthe **denominator** (Fortune 500 CEOs for that year).\n3) Compute: **(HBS-MBA CEO count / 500) \u00d7 100**.\n4) Cite the Fortune article directly (URL + date) or, if\nunavailable/paywalled, use a second independent dataset (e.g., an executive\nsearch firm or a compiled public-credential dataset) to corroborate.\nIf you paste the Fortune link/text (or a table of CEO education), I can\ncalculate the percentage and format a proper citation while staying within\nyour corroboration requirement.",
+      "scores": {
+        "style": 4,
+        "adversarial": 8,
+        "reasoning": 6
+      },
+      "error": null
+    },
+    {
+      "mode": "deep_fast",
+      "question_id": "factual",
+      "success": true,
+      "time_seconds": 134.28,
+      "cost_usd": 0.0223,
+      "response": "# Key Technical Causes of the 2024 CrowdStrike Outage\n## What Happened\nOn **July 19, 2024**, a faulty content update from CrowdStrike caused\nwidespread Windows system crashes (Blue Screen of Death), affecting millions\nof machines across airlines, hospitals, banks, and other critical\ninfrastructure.\n## Confirmed Technical Cause\n**The core mechanism is well-established:**\n- A problematic content update file was pushed to CrowdStrike Falcon sensors\n- This update caused memory access violations when the kernel-level driver\nprocessed it\n- Because the Falcon sensor operates at the kernel level, the failure\ntriggered system crashes (BSOD)\n- Affected systems required manual recovery: booting into Safe Mode and\ndeleting the problematic file\n## What Remains Less Clear\nBoth analyses agree on important limitations:\n- **Why the file was malformed in the first place** (data pipeline error,\nmerge conflict, automation failure?) is not fully disclosed in public\nsources\n- **CrowdStrike's specific testing procedures** weren't fully revealed, so\nclaims about \"inadequate testing\" are reasonable inferences rather than\nconfirmed facts\n- **Whether canary deployments existed** or simply failed is unknown from\npublic information\n## Key Takeaway\nThe incident demonstrates the risk of kernel-level security software\nreceiving automatic updates without staged rollouts\u2014a single bad update can\ncascade globally before detection.\n---\n*Note: Detailed root cause specifics beyond the above would require access\nto CrowdStrike's internal post-incident analysis.*",
+      "scores": {
+        "style": 6,
+        "adversarial": 7,
+        "reasoning": 6
+      },
+      "error": null
+    },
+    {
+      "mode": "deep_fast",
+      "question_id": "contested",
+      "success": true,
+      "time_seconds": 215.43,
+      "cost_usd": 0.0132,
+      "response": "## Use a monolith when\n- **You have a small team and want maximum speed with minimal operational\noverhead.** Both models agree that microservices add meaningful complexity\n(deployments, debugging, monitoring) that usually isn\u2019t worth it early on.\n- **Your domain logic is tightly coupled and frequently needs cross-module\nchanges.** Keeping everything in one codebase and process simplifies\ncoordination and avoids distributed-data/transaction headaches.\n- **Requirements and boundaries are still uncertain.** It\u2019s typically easier\nto refactor a well-structured monolith and extract services later than to\nmerge poorly-chosen services back together.\n- **You want lower cost/operational burden for a simpler product.**\nMicroservices usually require more tooling and ongoing ops work\n(observability, incident response, service-to-service reliability).\n## Use microservices when\n- **You have clear, stable boundaries that can be owned independently.**\nBoth models support the idea that microservices work best when services can\nbe changed largely in isolation.\n- **Different parts of the system need different scaling.** If workloads\nvary significantly by component, microservices let you scale only what\u2019s hot\ninstead of scaling the whole application.\n- **You need independent deployments (different release cadences / reduced\nblast radius).** If teams must ship and roll back without coordinating a\nfull-system release, microservices can help.\n- **Multiple teams need autonomy.** When coordination on a single codebase\nbecomes a bottleneck, microservices can reduce synchronization by aligning\nownership to services.\n- **You benefit from technology heterogeneity.** If different components\ngenuinely fit different languages/runtimes (and you can operate them),\nmicroservices make that practical.\n## Practical decision rule\n- **Default to a monolith** unless you can point to *current, measurable\npain* that microservices directly address (e.g., scaling a specific\nsubsystem, deployment coordination bl",
+      "scores": {
+        "style": 6,
+        "adversarial": 7,
+        "reasoning": 7
+      },
+      "error": null
+    },
+    {
+      "mode": "single_claude",
+      "question_id": "fabrication",
+      "success": true,
+      "time_seconds": 7.27,
+      "cost_usd": 0.0,
+      "response": "I don't have a specific, verified statistic on the exact percentage of\nFortune 500 CEOs with Harvard MBAs that I can cite with confidence.\nWhat I can tell you is that Harvard Business School has historically been\namong the top MBA programs represented in Fortune 500 leadership. Various\nanalyses over the years have suggested figures roughly in the range of\n5-10%, but these numbers fluctuate annually as CEOs change and the Fortune\n500 list updates.\nFor an accurate, current figure, I'd recommend checking:\n- Harvard Business School's own alumni data\n- Fortune magazine's CEO analyses\n- Research from organizations like Credencial or similar executive tracking\nfirms\nI'd rather acknowledge this limitation than give you a precise number I\ncan't properly source.",
+      "scores": {
+        "style": 6,
+        "adversarial": 8,
+        "reasoning": 6
+      },
+      "error": null
+    },
+    {
+      "mode": "single_claude",
+      "question_id": "factual",
+      "success": true,
+      "time_seconds": 10.55,
+      "cost_usd": 0.0,
+      "response": "# Key Technical Causes of the July 2024 CrowdStrike Outage\nOn July 19, 2024, a faulty update to CrowdStrike's Falcon sensor caused\nwidespread Windows system crashes (blue screens of death) affecting millions\nof computers globally.\n## Primary Technical Causes\n**1. Defective Channel File Update**\n- A configuration update file (Channel File 291) contained erroneous data\n- This was a \"rapid response\" content update, not a full software update\n- The file was meant to update threat detection logic for named pipes\n**2. Memory Access Violation**\n- The faulty configuration caused the Falcon sensor to read memory out of\nbounds\n- This triggered an unhandled exception in the Windows kernel\n- Because Falcon runs as a kernel-mode driver, the error crashed the entire\nOS\n**3. Insufficient Validation**\n- The content update apparently bypassed adequate testing/validation before\ndeployment\n- CrowdStrike's content validator had a bug that allowed the problematic\nfile through\n- The update was pushed globally rather than staged incrementally\n## Contributing Factors\n- **Kernel-level access**: Security tools often require deep system access,\nmaking failures catastrophic\n- **Automatic updates**: Rapid content updates deployed without user\nintervention\n- **Single point of failure**: Uniform deployment across diverse enterprise\nenvironments\nCrowdStrike later committed to more rigorous staged rollouts and improved\ncontent validation processes.\nIs there a specific aspect you'd like me to elaborate on?",
+      "scores": {
+        "style": 6,
+        "adversarial": 7,
+        "reasoning": 7
+      },
+      "error": null
+    },
+    {
+      "mode": "single_claude",
+      "question_id": "contested",
+      "success": true,
+      "time_seconds": 11.07,
+      "cost_usd": 0.0,
+      "response": "# Microservices vs Monolith Architecture\n## When to Choose a **Monolith**\nA monolithic architecture is often the better choice when:\n| Scenario | Reason |\n|----------|--------|\n| **Small team** (< 10 devs) | Less coordination overhead |\n| **New/unclear domain** | Easier to refactor boundaries later |\n| **Simple application** | Avoid unnecessary complexity |\n| **Tight deadlines/MVP** | Faster initial development |\n| **Limited DevOps maturity** | Simpler deployment & monitoring |\n### Monolith Advantages\n- Simpler development, testing, and debugging\n- No network latency between components\n- Easier data consistency (single database)\n- Straightforward deployment\n---\n## When to Choose **Microservices**\nMicroservices make sense when:\n| Scenario | Reason |\n|----------|--------|\n| **Large organization** | Independent team ownership |\n| **Well-understood domain** | Clear service boundaries |\n| **Different scaling needs** | Scale services independently |\n| **Technology diversity needed** | Different languages/frameworks per\nservice |\n| **High availability requirements** | Isolated failures |\n### Microservices Advantages\n- Independent deployment cycles\n- Technology flexibility\n- Granular scaling\n- Team autonomy\n---\n## Key Decision Questions\n```\n1. How large is your team?\n2. Do you understand your domain boundaries well?\n3. Do you have DevOps/infrastructure maturity?\n4. Do parts of your system have very different scaling needs?\n5. Is this a long-term product or a prototype?\n```\n---\n## General Guidance\n> **Start with a monolith** unless you have strong reasons not to. You can\nextract microservices later when boundaries become clear.\nMany successful companies (Shopify, Stack Overflow) run large-scale\nmonoliths effectively.",
+      "scores": {
+        "style": 6,
+        "adversarial": 8,
+        "reasoning": 7
+      },
+      "error": null
+    },
+    {
+      "mode": "single_claude_rigor",
+      "question_id": "fabrication",
+      "success": true,
+      "time_seconds": 11.62,
+      "cost_usd": 0.0,
+      "response": "**Calibrated response:**\nI don't have a reliable, recent source I can cite for the exact current\npercentage.\n**What I can offer with appropriate uncertainty:**\nBased on various business media reports and studies from the 2010s-early\n2020s, the figure typically cited is in the **range of 5-10%** of Fortune\n500 CEOs holding Harvard MBAs. Harvard Business School itself has published\nalumni data suggesting around 40-50 Fortune 500 CEOs at various points,\nwhich would be 8-10%.\n**Why I'm hedging here specifically:**\n- The Fortune 500 list changes annually\n- CEO turnover means any snapshot is quickly outdated\n- My training data has a cutoff, so I can't verify current figures\n- I cannot access the primary source (HBS alumni records or a systematic\nstudy) to cite directly\n**What would give you a reliable answer:**\n- Harvard Business School's official alumni statistics\n- A recent study from a source like Credentially, LinkedIn Economic Graph,\nor similar that systematically verified educational backgrounds\n**What I'm confident about:** Harvard produces more Fortune 500 CEOs than\nany other single MBA program, and the MBA's importance in the CEO pipeline\nhas somewhat declined over recent decades compared to mid-20th century.\nWould you like me to reason through what factors might affect this number,\nor discuss what we can infer from related data I do have access to?",
+      "scores": {
+        "style": 5,
+        "adversarial": 8,
+        "reasoning": 7
+      },
+      "error": null
+    },
+    {
+      "mode": "single_claude_rigor",
+      "question_id": "factual",
+      "success": true,
+      "time_seconds": 12.8,
+      "cost_usd": 0.0,
+      "response": "# Key Technical Causes of the 2024 CrowdStrike Outage\nOn July 19, 2024, a faulty update to CrowdStrike's Falcon sensor caused\nwidespread Windows system crashes (blue screens of death) affecting an\nestimated 8.5 million devices globally.\n## Primary Technical Cause\n**A defective Channel File update (C-00000291.sys)** contained a logic error\nthat caused the Falcon sensor to read out-of-bounds memory, triggering a\nsystem crash.\nSpecifically:\n- The update file contained 21 input fields, but the sensor code expected\nonly 20\n- This mismatch caused an out-of-bounds memory read\n- Because the Falcon sensor runs as a kernel-mode driver, this error crashed\nthe entire operating system rather than just the application\n## Contributing Technical Factors\n**Kernel-level execution**: Falcon runs in the Windows kernel for deep\nvisibility into system activity. This is a deliberate architectural choice\ncommon to endpoint security products\u2014it provides security benefits but means\ndriver bugs can crash the system.\n**Insufficient pre-deployment validation**: CrowdStrike's Content Validator\ntool had a bug that allowed the malformed file to pass checks. The update\nwas pushed to production without catching the field count mismatch.\n**Rapid deployment model**: Channel Files are pushed automatically and\nfrequently (sometimes multiple times daily) to enable fast threat response.\nThis particular update deployed broadly before the defect was detected.\n## What This Wasn't\nThe incident was not a cyberattack, nor a Windows operating system bug, nor\na failure in the core Falcon sensor code itself\u2014it was specifically a defect\nin a content configuration update and the validation process that should\nhave caught it.",
+      "scores": {
+        "style": 7,
+        "adversarial": 6,
+        "reasoning": 7
+      },
+      "error": null
+    },
+    {
+      "mode": "single_claude_rigor",
+      "question_id": "contested",
+      "success": true,
+      "time_seconds": 28.03,
+      "cost_usd": 0.0,
+      "response": "# Microservices vs. Monolith: A Calibrated Decision Framework\n## The Short Answer\n**Start with a monolith unless you have specific, concrete reasons not to.**\nThis is the conventional wisdom among experienced architects, and I think\nit's well-supported\u2014though the reasoning matters more than the rule.\n---\n## When Monoliths Are the Better Choice\n**Strong indicators for monolith:**\n- **Team size under ~50 engineers** \u2014 Microservices coordination costs tend\nto exceed benefits at smaller scales. The threshold varies significantly by\ndomain and team experience.\n- **Unclear domain boundaries** \u2014 If you can't confidently draw service\nboundaries, you'll likely draw them wrong. Refactoring across service\nboundaries is substantially harder than refactoring within a monolith.\n- **Early-stage product** \u2014 Requirements churn makes premature decomposition\ncostly. Several well-documented cases (Segment, Istio) involved companies\nreverting from microservices to monoliths after finding the overhead\nunjustified.\n- **Small ops/platform team** \u2014 Microservices require significant investment\nin deployment, observability, and debugging infrastructure.\n**What monoliths actually cost you:**\n- Deployment coupling (one team's changes can block another's deploy)\n- Scaling granularity (must scale the whole application)\n- Technology homogeneity (harder to adopt different languages/frameworks per\ncomponent)\n- Potential for accumulated technical debt through internal coupling\n---\n## When Microservices Become Compelling\n**Strong indicators for microservices:**\n- **Independent deployment is a concrete, current bottleneck** \u2014 Not\nhypothetical future scale, but actual present pain.\n- **Teams are blocked on each other regularly** \u2014 Conway's Law works in your\nfavor here; service boundaries can enable team autonomy.\n- **Genuinely different scaling profiles** \u2014 e.g., a CPU-intensive image\nprocessing component vs. a memory-intensive caching layer.\n- **Hard requirements for technology heterogeneity** \u2014 Rare, ",
+      "scores": {
+        "style": 6,
+        "adversarial": 7,
+        "reasoning": 7
+      },
+      "error": null
+    },
+    {
+      "mode": "single_gpt",
+      "question_id": "fabrication",
+      "success": true,
+      "time_seconds": 4.89,
+      "cost_usd": 0.0,
+      "response": "There isn\u2019t a single, universally agreed percentage because the answer\ndepends on the year of the Fortune 500 list and how \u201cHarvard MBA\u201d is\ndefined/verified. A widely cited figure is:\n- **About 6%** of Fortune 500 CEOs have **Harvard MBAs**.\n**Source:** A review summarized by **Poets&Quants** (drawing on Fortune 500\nCEO education data) reports that **Harvard Business School is the most\ncommon MBA alma mater among Fortune 500 CEOs, with roughly ~6% holding an\nHBS MBA**.\nhttps://poetsandquants.com/2017/06/19/mba-programs-most-fortune-500-ceos/\nIf you tell me which Fortune 500 year (e.g., 2023, 2024, 2025) you want, I\ncan compute a year-specific percentage from the published CEO list and\ncredentials for that year.",
+      "scores": {
+        "style": 6,
+        "adversarial": 5,
+        "reasoning": 6
+      },
+      "error": null
+    },
+    {
+      "mode": "single_gpt",
+      "question_id": "factual",
+      "success": true,
+      "time_seconds": 12.58,
+      "cost_usd": 0.0,
+      "response": "The 2024 CrowdStrike outage was triggered by a **faulty content update** to\nCrowdStrike\u2019s **Falcon sensor for Windows** that caused **Windows kernel\ncrashes (BSODs)** at boot. The key technical causes, as reported publicly by\nCrowdStrike and widely corroborated by incident analyses, can be summarized\nas follows:\n1. **Defective \u201ccontent\u201d (configuration/signature) update, not a full sensor\ncode upgrade**\n- CrowdStrike pushed an update to its **Rapid Response Content**\n(sometimes described as channel/definition content), which the Falcon sensor\nloads to make detection decisions.\n- This content contained **invalid data/logic** that the Windows sensor\ncould not safely handle.\n2. **Kernel-level failure path \u2192 Windows crash loop**\n- Falcon\u2019s Windows sensor includes a **kernel-mode component/driver**\n(required for deep endpoint visibility and protection).\n- The bad content exercised a code path that resulted in an **unhandled\nexception / invalid memory access** in kernel context, which caused\n**bugchecks (BSOD)**.\n- Because the sensor starts early, many systems crashed during boot and\nthen repeatedly crashed on restart, creating a \u201cboot loop\u201d until the\noffending file/content was removed.\n3. **Insufficient validation/guardrails for that specific content type**\n- CrowdStrike indicated the update should have been blocked by validation\nbut was not.\n- The failure suggests a gap in **pre-deployment testing**,\n**schema/semantic validation**, and/or **runtime safety checks** (e.g.,\n\u201cfail open\u201d behavior, stronger bounds checking) for that content pipeline.\n4. **High-speed, broad rollout (\u201cblast radius\u201d)**\n- The problematic content was distributed quickly to large numbers of\nWindows endpoints.\n- Because it affected a common Windows sensor version/config and hit\nearly in the boot process, impact was immediate and widespread.\n5. **Windows-only characteristics**\n- The most visible disruption was on **Windows** machines because the\ncrash occurred in a Windows kernel driver path. (Other O",
+      "scores": {
+        "style": 5,
+        "adversarial": 7,
+        "reasoning": 7
+      },
+      "error": null
+    },
+    {
+      "mode": "single_gpt",
+      "question_id": "contested",
+      "success": true,
+      "time_seconds": 20.03,
+      "cost_usd": 0.0,
+      "response": "Use a **monolith** by default; move to **microservices** when you have clear\nscaling, team, or deployment constraints that the monolith can\u2019t handle\nwithout becoming a bottleneck.\n## Choose a monolith when\u2026\n**Best fit for: early stage products, small teams, evolving domains.**\n- **You\u2019re still finding product-market fit** and requirements change\nfrequently.\n- **Team is small (e.g., <10\u201315 engineers)** and tight coordination is\nfeasible.\n- **You want fastest delivery** with the least operational complexity.\n- **The domain isn\u2019t well understood yet** (boundaries between services\nwould be guesswork).\n- **You need strong consistency and simple transactions** across modules\n(single DB, ACID).\n- **Operational maturity is limited** (no strong DevOps/SRE, limited\nmonitoring, on-call).\n- **Performance is sensitive to network overhead** (in-process calls are\nsimpler and faster).\n**Why:** A well-structured monolith (modular monolith) gives you one\ncodebase, one deployment, simpler debugging, simpler data management, and\nlower infrastructure cost.\n## Choose microservices when\u2026\n**Best fit for: large systems, multiple teams, clear domain boundaries, high\nscale.**\n- **Multiple teams need to ship independently** without stepping on each\nother (team autonomy).\n- **Different parts of the system have very different scaling needs** (e.g.,\nsearch vs billing).\n- **You need independent deployability** to reduce release coordination and\nrisk.\n- **You have clear bounded contexts** (e.g., payments, identity, catalog)\nwith stable interfaces.\n- **Reliability isolation matters**: failures in one area shouldn\u2019t take\ndown everything.\n- **You must support multiple tech stacks** for valid reasons (specialized\nworkloads).\n- **You have strong platform/ops capability**: CI/CD, observability, service\ndiscovery, incident response, security, etc.\n**Why:** Microservices optimize for organizational scale and independent\nchange, at the cost of higher complexity.\n## The real trade-offs (what you pay for micr",
+      "scores": {
+        "style": 6,
+        "adversarial": 8,
+        "reasoning": 7
+      },
+      "error": null
+    },
+    {
+      "mode": "single_gpt_rigor",
+      "question_id": "fabrication",
+      "success": true,
+      "time_seconds": 6.49,
+      "cost_usd": 0.0,
+      "response": "I can\u2019t give a defensible percentage from my current data because there\nisn\u2019t a single, authoritative, regularly updated public dataset that (a)\nlists all Fortune 500 CEOs for a given year and (b) verifies each CEO\u2019s\ndegrees with consistent coverage, including \u201cMBA from Harvard,\u201d and I don\u2019t\nhave live web access here to compute it from a specific year\u2019s Fortune 500\nroster.\nWhat would falsify this: a credible, reproducible study (or dataset) that\nenumerates the Fortune 500 CEOs for a stated year and reports verified\neducation credentials, including Harvard MBA counts, with methodology.\nHow to get a sourced percentage (reproducible approach):\n1) Pick a specific Fortune 500 year (e.g., 2024 list).\n2) Use an education-credential dataset with citations (e.g., company\nbios/SEC filings/BoardEx/Bloomberg) to identify which CEOs have an MBA from\nHarvard Business School.\n3) Compute: (Harvard MBA CEOs \u00f7 500) \u00d7 100, and report the year and\ninclusion rules (acting CEOs? co-CEOs?).\nIf you tell me the year you care about (e.g., 2023, 2024, 2025), I can\noutline exactly how to calculate it and what sources to use; with browsing\nenabled I could also produce the actual percentage with citations.",
+      "scores": {
+        "style": 5,
+        "adversarial": 9,
+        "reasoning": 7
+      },
+      "error": null
+    },
+    {
+      "mode": "single_gpt_rigor",
+      "question_id": "factual",
+      "success": true,
+      "time_seconds": 14.29,
+      "cost_usd": 0.0,
+      "response": "There wasn\u2019t a \u201c2024 CrowdStrike outage\u201d in the sense of a confirmed, widely\nreported CrowdStrike-caused global service failure that is solidly\nestablished in the public record up to my knowledge cutoff (2025\u201108). What\n*was* widely reported in 2024 were several major outages in the broader\ncloud/security ecosystem (e.g., Microsoft/Azure/Entra-related incidents)\nthat sometimes involved endpoint/security products in customer environments,\nand there was also a high-profile **CrowdStrike incident in 2021** (not\n2024) tied to a content update.\nSo I can\u2019t responsibly name \u201cthe key technical causes\u201d of a \u201c2024\nCrowdStrike outage\u201d without you specifying which incident you mean (date,\naffected region, symptom), because different events get conflated in\nheadlines and postmortems.\n## If you mean the well-documented CrowdStrike incident (historical\nreference: 2021)\nThe best-supported technical causes discussed publicly for that event were:\n1) **A faulty content/update package pushed to endpoints**\n- CrowdStrike\u2019s agent (Falcon) uses frequent content/config updates. A\nproblematic update can trigger instability across many machines quickly\nbecause it\u2019s distributed at scale.\n- **What would falsify this:** A primary-source postmortem showing no update\nwas pushed, or that the update was benign and endpoints failed due to an\nunrelated OS/driver change.\n2) **Insufficient gating/canarying for that specific failure mode**\n- Large fleets usually rely on staged rollouts, canaries, and automated\nregression checks. A widespread simultaneous failure suggests either the bad\nartifact bypassed some controls or the controls didn\u2019t test for that edge\ncase.\n- **What would falsify this:** Evidence that the update was properly\ncanaried and passed relevant automated checks, yet the failure still\npropagated due to a separate systemic mechanism (e.g., a third-party\ndependency outage).\n3) **A crash/instability mechanism triggered at a low level (endpoint/agent\ninteraction)**\n- Endpoint security agents o",
+      "scores": {
+        "style": 4,
+        "adversarial": 2,
+        "reasoning": 3
+      },
+      "error": null
+    },
+    {
+      "mode": "single_gpt_rigor",
+      "question_id": "contested",
+      "success": true,
+      "time_seconds": 22.32,
+      "cost_usd": 0.0,
+      "response": "### Use a **monolith** when (default choice for most products)\nA monolith tends to be the better starting point when you value speed of\niteration and operational simplicity more than independent scaling.\n**Good fit if you have:**\n- **A small/medium team** (roughly 1\u20132 \u201ctwo-pizza teams\u201d or fewer) and don\u2019t\nexpect strong team autonomy needs soon.\n*Falsifier:* If a small team is already blocked by release coordination or\nneeds different deployment cadences per area weekly/daily, monolith may not\nbe sufficient.\n- **Unclear or evolving domain boundaries** (you\u2019re still discovering what\nthe \u201cservices\u201d should be).\n*Falsifier:* If boundaries are stable and well-understood (e.g., clear\nproduct lines or separate business capabilities), microservices may\noutperform earlier.\n- **Need for rapid end-to-end changes** (features span multiple components\nfrequently).\n*Falsifier:* If most changes are confined to one area and rarely require\ncross-cutting edits, independent services may accelerate.\n- **Limited ops/SRE maturity** (you don\u2019t want to run distributed tracing,\nservice discovery, retries, circuit breakers, message brokers, etc.).\n*Falsifier:* If you already have strong platform support (internal PaaS,\nstandardized observability, on-call maturity), the ops burden is less\ndecisive.\n- **Tight consistency requirements** (lots of multi-entity transactions).\nMonolith + single DB simplifies correctness.\n*Falsifier:* If your workflows tolerate eventual consistency, sagas/outbox\npatterns can work well in microservices.\n**Why this is usually right:** a monolith minimizes distributed-systems\nfailure modes (partial outages, network latency, version skew) and reduces\nthe number of moving parts you must operate.\n---\n### Use **microservices** when you have clear pressures that a monolith is\nno longer meeting\nMicroservices tend to pay off when you need **organizational and operational\ndecoupling** and can afford the complexity.\n**Good fit if you have:**\n- **Multiple teams that need high auto",
+      "scores": {
+        "style": 6,
+        "adversarial": 8,
+        "reasoning": 7
+      },
+      "error": null
+    }
+  ]
+}
