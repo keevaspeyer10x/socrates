@@ -14,13 +14,11 @@ from .base import Solver
 from ..rate_limiter import RateLimiter
 
 
-# Default models from multiminds (top 5)
+# Default models - using models with available API keys
 DEFAULT_MODELS = [
     "anthropic/claude-opus-4-5-20251101",    # Claude Opus 4.5
-    "google/gemini-3-pro-preview",            # Gemini 3 Pro
     "openai/gpt-5.2",                         # GPT-5.2
-    "x-ai/grok-4.1-fast",                     # Grok 4.1
-    "deepseek/deepseek-v3.2",                 # DeepSeek V3.2
+    "google/gemini-2.5-pro",                  # Gemini 2.5 Pro
 ]
 
 # Default synthesizer model
@@ -123,6 +121,39 @@ REQUIREMENTS:
 Think step by step:"""
 
 
+# Systematic evaluation mode: evaluate ALL options before choosing
+SYSTEMATIC_QUERY_PROMPT = """You must systematically evaluate ALL answer options before choosing.
+
+{question}
+
+## REQUIRED ANALYSIS:
+
+### Option A Analysis:
+- What would make this correct?
+- What would make this wrong?
+- Confidence in this option (low/medium/high):
+
+### Option B Analysis:
+- What would make this correct?
+- What would make this wrong?
+- Confidence in this option (low/medium/high):
+
+### Option C Analysis:
+- What would make this correct?
+- What would make this wrong?
+- Confidence in this option (low/medium/high):
+
+### Option D Analysis:
+- What would make this correct?
+- What would make this wrong?
+- Confidence in this option (low/medium/high):
+
+### Comparison:
+Which option has the strongest case and weakest objections?
+
+ANSWER:"""
+
+
 REASONING_SYNTHESIS_PROMPT = """You are synthesizing responses from multiple AI models. Each model has provided step-by-step reasoning.
 
 ## Model Responses:
@@ -203,14 +234,16 @@ REVISION_PROMPT = """You answered a question, and other AI models have critiqued
 ## Critiques from Other Models:
 {critiques}
 
-## Your Task:
-Consider the critiques carefully:
-1. Which critiques raise valid points?
-2. Which critiques are mistaken?
-3. Should you revise your answer based on the feedback?
+## IMPORTANT: Resist unjustified changes
 
-If the critiques identify genuine errors, correct your answer.
-If your original answer was correct, defend it and explain why the critiques are wrong.
+Before changing your answer, ask yourself:
+1. Does the critique identify a SPECIFIC ERROR in my reasoning (not just offer an alternative view)?
+2. Can I verify that my original reasoning was actually wrong?
+3. Is the critique's alternative reasoning actually stronger, or just different?
+
+**Only change your answer if the critique found a genuine mistake.** Don't change just because another model is confident or offers a plausible-sounding alternative.
+
+If your original answer was correct, defend it firmly and explain why the critique is mistaken.
 
 CRITICAL FOR MULTIPLE CHOICE: Your FINAL line must be exactly "ANSWER: X" where X is ONLY the letter (A, B, C, or D).
 
@@ -225,17 +258,123 @@ CRITIQUE_SYNTHESIS_PROMPT = """Multiple AI models answered a question, received 
 ## Model Answers After Revision:
 {revised_answers}
 
-## Your Task:
-Synthesize the final answer based on the deliberation:
+## STRICT SYNTHESIS RULES:
 
-1. Which model(s) changed their answer after critique? Why?
-2. Which model(s) defended their original answer? Were their defenses convincing?
-3. What is the consensus (if any)?
-4. Based on the quality of reasoning and responses to critique, what is the correct answer?
+### Rule 1: You are a JUDGE, not a solver
+Do NOT solve the problem yourself. Your only job is to evaluate which model's reasoning is most sound.
 
-CRITICAL FOR MULTIPLE CHOICE: Your FINAL line must be exactly "ANSWER: X" where X is ONLY the letter (A, B, C, or D).
+### Rule 2: Extract CONFIDENCE and WEAKNESS signals
+Each model stated their confidence level (LOW/MEDIUM/HIGH) and areas of weakness. Use this:
+- HIGH confidence with clear reasoning > MEDIUM confidence
+- LOW confidence answers should be treated skeptically even if reasoning looks plausible
+- If a model admits weakness in a specific area (e.g., organic chemistry), weigh their answer lower for that domain
+- Agreement between HIGH-confidence models is very strong signal
+
+### Rule 3: CRITICAL - Handle Devil's Advocate Challenges
+If there's a "FATAL FLAW PROVEN" section with a computed alternative answer:
+- This is a STRONG signal that the consensus may be wrong
+- The challenger has identified a specific error AND computed an alternative
+- You MUST seriously consider switching to the challenger's answer
+- Only reject the proven flaw if you can identify a specific error in the challenger's calculation
+
+If there's a "POSSIBLE FLAW BUT UNPROVEN" section:
+- The challenger found a concern but couldn't prove an alternative
+- This is weak evidence; maintain the original answer unless the concern is very compelling
+
+### Rule 4: Majority wins UNLESS fatal flaw proven
+If models agree, accept their answer UNLESS:
+- A devil's advocate PROVED a fatal flaw with concrete calculation
+- You can identify a concrete, specific error in their shared reasoning
+
+### Rule 5: For disagreements, consider confidence + check for fatal flaws
+When models disagree:
+- If one is HIGH confidence and other is LOW, favor HIGH (unless fatal flaw found)
+- Check for: calculation errors, logical contradictions, misreading the question
+- The model with NO fatal flaws wins
+
+### Rule 6: Be skeptical of your own analysis
+If you start deriving your own solution, STOP. You're here to judge, not solve.
+
+## Process:
+
+**Step 1:** Extract each model's answer AND confidence level.
+
+**Step 2:** Check for any "FATAL FLAW PROVEN" challenges - these take priority.
+
+**Step 3:** If unanimous AND all HIGH confidence AND no proven fatal flaw, accept.
+
+**Step 4:** If split, consider confidence levels first, then check for fatal flaws.
+
+CRITICAL: Your FINAL line must be exactly "ANSWER: X" where X is ONLY the letter (A, B, C, or D).
 
 ANSWER:"""
+
+
+# Adversarial consensus challenge - used when models unanimously agree
+CHALLENGE_CONSENSUS_PROMPT = """The models have chosen answer {consensus_answer}. Your job is to play DEVIL'S ADVOCATE.
+
+## Question:
+{question}
+
+## The Consensus Answer:
+{consensus_answer}
+
+## The Models' Reasoning:
+{consensus_reasoning}
+
+## YOUR TASK: Try to DISPROVE their answer
+
+Even if their answer seems correct, you MUST:
+1. Identify potential flaws in their reasoning
+2. Argue why one of the OTHER options (not {consensus_answer}) might actually be correct
+3. Point out any assumptions they made that could be wrong
+4. Check their calculations/logic for subtle errors
+
+Be rigorous. If there IS a flaw in their reasoning, find it.
+
+After your analysis, conclude with ONE of:
+- "CHALLENGE FAILS: The consensus answer {consensus_answer} withstands scrutiny because [reason]"
+- "CHALLENGE SUCCEEDS: A better answer is [X] because [specific error found]"
+
+Your devil's advocate analysis:"""
+
+
+# Aggressive devil's advocate - challenges EVERY answer by arguing for alternatives
+AGGRESSIVE_CHALLENGE_PROMPT = """You are a PhD examiner who suspects the proposed answer may be WRONG.
+
+## Question:
+{question}
+
+## The Proposed Answer: {proposed_answer}
+
+## The Reasoning Given:
+{reasoning}
+
+## YOUR TASK: Find and PROVE the Fatal Flaw
+
+This is a PhD-level question designed to trap people who use textbook approaches. Your job is to find if/where the reasoning goes wrong.
+
+**STEP 1: Identify potential flaws**
+Consider:
+1. **INTERPRETATION ERROR** - Is there a different way to read the question that changes everything?
+2. **HIDDEN ASSUMPTION** - What assumption are they making that the question violates?
+3. **WRONG REGIME** - Are they applying a formula/principle outside its domain of validity?
+4. **CALCULATION ERROR** - Is there a subtle math/logic mistake?
+5. **MISSING PHYSICS** - Is there an effect they're ignoring that dominates here?
+
+**STEP 2: For the STRONGEST alternative, COMPUTE the answer**
+If you believe a different answer is correct, you MUST:
+- Show the complete calculation/derivation
+- Use the specific numbers from the question
+- Arrive at a specific numerical result that matches one of: {alternatives}
+- If you can't compute it concretely, your challenge is too weak
+
+**STEP 3: Conclude with HIGH confidence only if you proved your case**
+- "FATAL FLAW PROVEN: The correct answer is [X] because [specific error + your calculation showing X is correct]"
+- "POSSIBLE FLAW BUT UNPROVEN: [describe the issue but acknowledge you couldn't prove an alternative]"
+- "NO FATAL FLAW: Answer {proposed_answer} survives aggressive scrutiny"
+
+Your aggressive analysis:"""
 
 
 # Adversarial debate mode: argue for AND against each option
@@ -313,7 +452,13 @@ class MindsSolver(Solver):
         - reasoning: Explicit step-by-step reasoning with cross-model discussion
         - critique: Models critique each other's answers, then revise based on feedback
         - critique2: Two rounds of critique and revision for deeper refinement
+        - critique3: Three rounds of critique and revision for maximum refinement
         - debate: Adversarial debate - models argue FOR and AGAINST each option
+        - systematic: Forces evaluation of ALL options before choosing
+        - critique_systematic: Systematic evaluation + critique workflow
+        - critique_ensemble: Run critique 3 times and take majority vote
+        - critique_challenge: Critique + devil's advocate challenge when consensus
+        - critique_aggressive: Critique + ALWAYS run aggressive devil's advocate
     """
 
     name = "minds"
@@ -399,11 +544,37 @@ class MindsSolver(Solver):
         for i, choice in enumerate(choices[:len(letters)]):
             options.append(f"{letters[i]}) {choice}")
 
-        formatted = f"""Answer the following multiple choice question. The entire content of your response should be of the following format: 'ANSWER: $LETTER' (without quotes) where LETTER is one of {','.join(letters[:len(choices)])}.
+        formatted = f"""This is a PhD-level question designed to distinguish experts from those who only know textbook approaches.
 
 {input_text}
 
-{chr(10).join(options)}"""
+{chr(10).join(options)}
+
+THINK LIKE AN EXPERT, NOT A TEXTBOOK:
+
+Textbooks teach methods that work under specific conditions. Experts know where those conditions break down. This question may be testing whether you recognize the boundaries of standard approaches.
+
+1. **IDENTIFY YOUR APPROACH** - What standard method or principle does this question evoke? What textbook chapter would this be in?
+
+2. **VALIDITY CHECK** - List the assumptions your approach requires. Ask: "This method works WHEN..." For each assumption:
+   - State it explicitly
+   - Check if THIS SPECIFIC problem satisfies it
+   - If violated, how does that change the answer?
+
+3. **SCALE & REGIME** - Are you in the regime where this approach is valid?
+   - Check for: extreme values, boundary cases, competing effects
+   - What terms are you neglecting, and are they actually negligible here?
+
+4. **STEELMAN THE ALTERNATIVES** - For each OTHER answer choice, what interpretation or approach would make IT correct? Could you be missing something?
+
+5. **FINAL ANSWER** - Given your validity analysis, which answer survives scrutiny?
+
+State CONFIDENCE: LOW/MEDIUM/HIGH
+Note WEAKNESSES in your domain knowledge.
+
+End with exactly: ANSWER: $LETTER (where LETTER is {','.join(letters[:len(choices)])})
+
+Your analysis:"""
         return formatted
 
     async def _query_single_model(
@@ -451,6 +622,20 @@ class MindsSolver(Solver):
                             break
                 reasoning_q = REASONING_QUERY_PROMPT.format(question=question)
                 messages = [ChatMessageUser(content=reasoning_q)]
+        # For systematic mode, force evaluation of all options
+        elif self.mode in ("systematic", "critique_systematic"):
+            if mc_prompt:
+                systematic_mc = SYSTEMATIC_QUERY_PROMPT.format(question=mc_prompt)
+                messages = [ChatMessageUser(content=systematic_mc)]
+            else:
+                question = ""
+                if hasattr(state, 'messages') and state.messages:
+                    for msg in state.messages:
+                        if hasattr(msg, 'role') and msg.role == 'user':
+                            question = str(msg.content) if hasattr(msg, 'content') else str(msg)
+                            break
+                systematic_q = SYSTEMATIC_QUERY_PROMPT.format(question=question)
+                messages = [ChatMessageUser(content=systematic_q)]
         elif mc_prompt:
             # Use formatted multiple choice prompt
             messages = [ChatMessageUser(content=mc_prompt)]
@@ -629,6 +814,111 @@ class MindsSolver(Solver):
             return str(response.message.content)
         return str(response)
 
+    def _extract_answer_from_response(self, response: str) -> str | None:
+        """Extract the answer letter from a model response."""
+        import re
+        match = re.search(r'ANSWER:\s*\*{0,2}([A-Ha-h])\b', response)
+        if match:
+            return match.group(1).upper()
+        return None
+
+    async def _challenge_consensus(
+        self,
+        question: str,
+        consensus_answer: str,
+        consensus_reasoning: str,
+        challenger_model: str,
+    ) -> tuple[bool, str, str | None]:
+        """Have a model challenge a unanimous consensus.
+
+        Returns:
+            Tuple of (challenge_succeeded, challenge_text, alternative_answer)
+        """
+        # Apply rate limiting
+        provider = self.rate_limiter.get_provider_from_model(challenger_model)
+        await self.rate_limiter.acquire(provider)
+
+        model = await self._get_model(challenger_model)
+
+        from inspect_ai.model import ChatMessageUser
+        challenge_prompt = CHALLENGE_CONSENSUS_PROMPT.format(
+            question=question,
+            consensus_answer=consensus_answer,
+            consensus_reasoning=consensus_reasoning
+        )
+
+        response = await model.generate([ChatMessageUser(content=challenge_prompt)])
+
+        if hasattr(response, 'completion'):
+            text = response.completion
+        elif hasattr(response, 'message') and hasattr(response.message, 'content'):
+            text = str(response.message.content)
+        else:
+            text = str(response)
+
+        # Parse the result
+        if "CHALLENGE SUCCEEDS" in text.upper():
+            # Extract the alternative answer
+            import re
+            match = re.search(r'better answer is\s*\[?([A-D])\]?', text, re.IGNORECASE)
+            alt_answer = match.group(1).upper() if match else None
+            return (True, text, alt_answer)
+        else:
+            return (False, text, None)
+
+    async def _aggressive_challenge(
+        self,
+        question: str,
+        proposed_answer: str,
+        reasoning: str,
+        all_choices: list[str],
+        challenger_model: str,
+    ) -> tuple[bool, str, str | None]:
+        """Aggressively challenge an answer by assuming it's wrong.
+
+        Returns:
+            Tuple of (fatal_flaw_found, challenge_text, alternative_answer)
+        """
+        # Apply rate limiting
+        provider = self.rate_limiter.get_provider_from_model(challenger_model)
+        await self.rate_limiter.acquire(provider)
+
+        model = await self._get_model(challenger_model)
+
+        # Build alternatives list (all choices except proposed)
+        letters = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H'][:len(all_choices)]
+        alternatives = [l for l in letters if l != proposed_answer]
+
+        from inspect_ai.model import ChatMessageUser
+        challenge_prompt = AGGRESSIVE_CHALLENGE_PROMPT.format(
+            question=question,
+            proposed_answer=proposed_answer,
+            reasoning=reasoning,
+            alternatives=', '.join(alternatives)
+        )
+
+        response = await model.generate([ChatMessageUser(content=challenge_prompt)])
+
+        if hasattr(response, 'completion'):
+            text = response.completion
+        elif hasattr(response, 'message') and hasattr(response.message, 'content'):
+            text = str(response.message.content)
+        else:
+            text = str(response)
+
+        # Parse the result
+        import re
+        if "FATAL FLAW PROVEN" in text.upper():
+            # Strong challenge with computed alternative
+            match = re.search(r'correct answer is\s*\[?([A-D])\]?', text, re.IGNORECASE)
+            alt_answer = match.group(1).upper() if match else None
+            return (True, text, alt_answer)
+        elif "POSSIBLE FLAW" in text.upper():
+            # Weak challenge - found issue but couldn't prove alternative
+            return (False, text, None)
+        else:
+            return (False, text, None)
+
     async def _run_critique_workflow(
         self,
         state: Any,
@@ -636,8 +926,9 @@ class MindsSolver(Solver):
     ) -> list[tuple[str, str]]:
         """Run the full critique workflow.
 
-        1. Each model critiques other models' answers
-        2. Each model revises based on critiques received
+        1. Check if models agree - if yes, minimal critique needed
+        2. If disagreement, have disagreeing models critique each other
+        3. Each model revises based on critiques received
 
         Args:
             state: TaskState with the question
@@ -666,21 +957,52 @@ class MindsSolver(Solver):
             # Not enough responses to critique
             return initial_responses
 
-        # Phase 1: Each model critiques others
-        # For efficiency, each model critiques one other model (round-robin)
+        # Extract answers to check for agreement
+        answer_groups: dict[str, list[tuple[str, str]]] = {}
+        for model_id, response in valid_responses:
+            answer = self._extract_answer_from_response(response)
+            if answer:
+                if answer not in answer_groups:
+                    answer_groups[answer] = []
+                answer_groups[answer].append((model_id, response))
+
+        # Phase 1: Determine critique strategy based on agreement
         all_critiques: dict[str, list[tuple[str, str]]] = {m: [] for m, _ in valid_responses}
-
         critique_tasks = []
-        for i, (model_id, answer) in enumerate(valid_responses):
-            # Get critique from next model in list (round-robin)
-            critic_idx = (i + 1) % len(valid_responses)
-            critic_model = valid_responses[critic_idx][0]
 
-            async def get_critique_task(critic=critic_model, q=question, a=answer, target=model_id):
-                critique = await self._get_critique(critic, q, a)
-                return (target, critic, critique)
+        if len(answer_groups) == 1:
+            # All models agree - do minimal critique (round-robin) to catch errors
+            for i, (model_id, answer) in enumerate(valid_responses):
+                critic_idx = (i + 1) % len(valid_responses)
+                critic_model = valid_responses[critic_idx][0]
 
-            critique_tasks.append(get_critique_task())
+                async def get_critique_task(critic=critic_model, q=question, a=answer, target=model_id):
+                    critique = await self._get_critique(critic, q, a)
+                    return (target, critic, critique)
+
+                critique_tasks.append(get_critique_task())
+        else:
+            # Models disagree - have minority critique majority AND vice versa
+            # This ensures the correct answer (if in minority) gets heard
+            sorted_groups = sorted(answer_groups.items(), key=lambda x: len(x[1]), reverse=True)
+            majority_answer, majority_models = sorted_groups[0]
+            minority_models = [(m, r) for ans, models in sorted_groups[1:] for m, r in models]
+
+            # Majority models critique minority answers
+            for minority_model, minority_response in minority_models:
+                for majority_model, _ in majority_models[:2]:  # Limit to 2 critiques each
+                    async def get_critique_task(critic=majority_model, q=question, a=minority_response, target=minority_model):
+                        critique = await self._get_critique(critic, q, a)
+                        return (target, critic, critique)
+                    critique_tasks.append(get_critique_task())
+
+            # Minority models critique majority answers (crucial for finding errors)
+            for majority_model, majority_response in majority_models:
+                for minority_model, _ in minority_models[:2]:  # Limit to 2 critiques each
+                    async def get_critique_task(critic=minority_model, q=question, a=majority_response, target=majority_model):
+                        critique = await self._get_critique(critic, q, a)
+                        return (target, critic, critique)
+                    critique_tasks.append(get_critique_task())
 
         # Run critiques in parallel
         critique_results = await asyncio.gather(*critique_tasks, return_exceptions=True)
@@ -845,6 +1167,103 @@ class MindsSolver(Solver):
             # Second round
             responses = await self._run_critique_workflow(state, responses)
 
+        # For critique3 mode, run THREE rounds of critique-revision
+        if self.mode == "critique3":
+            responses = await self._run_critique_workflow(state, responses)
+            # Second round
+            responses = await self._run_critique_workflow(state, responses)
+            # Third round
+            responses = await self._run_critique_workflow(state, responses)
+
+        # For critique_systematic mode, run critique workflow (systematic prompting already done in query)
+        if self.mode == "critique_systematic":
+            responses = await self._run_critique_workflow(state, responses)
+
+        # For critique_challenge mode, run critique + challenge consensus if unanimous
+        challenge_result = None
+        aggressive_result = None
+        if self.mode == "critique_challenge":
+            responses = await self._run_critique_workflow(state, responses)
+
+            # Check if there's consensus
+            answer_groups: dict[str, list[tuple[str, str]]] = {}
+            for model_id, response in responses:
+                answer = self._extract_answer_from_response(response)
+                if answer:
+                    if answer not in answer_groups:
+                        answer_groups[answer] = []
+                    answer_groups[answer].append((model_id, response))
+
+            # If unanimous consensus, challenge it
+            if len(answer_groups) == 1:
+                consensus_answer = list(answer_groups.keys())[0]
+                consensus_reasoning = "\n\n".join([r for _, r in list(answer_groups.values())[0]])
+
+                # Get question for challenge
+                mc_prompt = self._format_multiple_choice(state)
+                q = mc_prompt if mc_prompt else str(state.input) if hasattr(state, 'input') else ""
+
+                # Use a different model for challenge - prefer GPT if Claude was in consensus, vice versa
+                # Find a model that wasn't the primary consensus holder
+                consensus_models = {m for m, _ in list(answer_groups.values())[0]}
+                challenger = None
+                for m in self.models:
+                    if m not in consensus_models:
+                        challenger = m
+                        break
+                # If all models agreed, use GPT to challenge
+                if challenger is None:
+                    challenger = "openai/gpt-5.2"
+
+                challenge_succeeded, challenge_text, alt_answer = await self._challenge_consensus(
+                    q, consensus_answer, consensus_reasoning, challenger
+                )
+
+                challenge_result = {
+                    "consensus": consensus_answer,
+                    "succeeded": challenge_succeeded,
+                    "text": challenge_text,
+                    "alternative": alt_answer
+                }
+
+        # For critique_aggressive mode, run critique + ALWAYS run aggressive challenge
+        if self.mode == "critique_aggressive":
+            responses = await self._run_critique_workflow(state, responses)
+
+            # Extract the current answer (majority or first)
+            answer_groups: dict[str, list[tuple[str, str]]] = {}
+            for model_id, response in responses:
+                answer = self._extract_answer_from_response(response)
+                if answer:
+                    if answer not in answer_groups:
+                        answer_groups[answer] = []
+                    answer_groups[answer].append((model_id, response))
+
+            if answer_groups:
+                # Get the proposed answer (majority vote)
+                sorted_groups = sorted(answer_groups.items(), key=lambda x: len(x[1]), reverse=True)
+                proposed_answer = sorted_groups[0][0]
+                proposed_reasoning = "\n\n".join([r for _, r in sorted_groups[0][1]])
+
+                # Get question and choices
+                mc_prompt = self._format_multiple_choice(state)
+                q = mc_prompt if mc_prompt else str(state.input) if hasattr(state, 'input') else ""
+                choices = getattr(state, 'choices', [])
+
+                # Use GPT for aggressive challenge (different perspective)
+                challenger = "openai/gpt-5.2"
+
+                fatal_flaw_found, aggressive_text, alt_answer = await self._aggressive_challenge(
+                    q, proposed_answer, proposed_reasoning, choices, challenger
+                )
+
+                aggressive_result = {
+                    "proposed": proposed_answer,
+                    "fatal_flaw": fatal_flaw_found,
+                    "text": aggressive_text,
+                    "alternative": alt_answer
+                }
+
         # For debate mode, run adversarial debate instead of using initial responses
         debate_for = ""
         debate_against = ""
@@ -859,19 +1278,39 @@ class MindsSolver(Solver):
 
         # Get question for critique/debate synthesis prompt
         question = ""
-        if self.mode in ("critique", "critique2", "debate"):
+        if self.mode in ("critique", "critique2", "critique3", "critique_systematic", "critique_challenge", "critique_aggressive", "debate"):
             mc_prompt = self._format_multiple_choice(state)
             if mc_prompt:
                 question = mc_prompt
             elif hasattr(state, 'input'):
                 question = str(state.input)
 
+        # Add challenge result to formatted responses if available
+        if challenge_result:
+            challenge_section = f"\n\n### DEVIL'S ADVOCATE CHALLENGE\nConsensus answer: {challenge_result['consensus']}\n"
+            if challenge_result['succeeded']:
+                challenge_section += f"**CHALLENGE SUCCEEDED** - Alternative suggested: {challenge_result['alternative']}\n"
+            else:
+                challenge_section += "**CHALLENGE FAILED** - Consensus withstood scrutiny\n"
+            challenge_section += f"\nChallenge analysis:\n{challenge_result['text']}"
+            formatted_responses += challenge_section
+
+        # Add aggressive challenge result if available
+        if aggressive_result:
+            aggressive_section = f"\n\n### AGGRESSIVE DEVIL'S ADVOCATE\nProposed answer: {aggressive_result['proposed']}\n"
+            if aggressive_result['fatal_flaw']:
+                aggressive_section += f"**FATAL FLAW FOUND** - Alternative: {aggressive_result['alternative']}\n"
+            else:
+                aggressive_section += "**NO FATAL FLAW** - Answer survives aggressive scrutiny\n"
+            aggressive_section += f"\nAggressive analysis:\n{aggressive_result['text']}"
+            formatted_responses += aggressive_section
+
         # Use appropriate synthesis prompt based on mode
         if self.mode == "deep":
             synthesis_prompt = DEEP_SYNTHESIS_PROMPT.format(responses=formatted_responses)
         elif self.mode == "reasoning":
             synthesis_prompt = REASONING_SYNTHESIS_PROMPT.format(responses=formatted_responses)
-        elif self.mode in ("critique", "critique2"):
+        elif self.mode in ("critique", "critique2", "critique3", "critique_systematic", "critique_challenge", "critique_aggressive"):
             synthesis_prompt = CRITIQUE_SYNTHESIS_PROMPT.format(
                 question=question,
                 revised_answers=formatted_responses

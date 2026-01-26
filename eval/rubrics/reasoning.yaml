@@ -1,0 +1,56 @@
+name: reasoning
+version: "1.0.0"
+description: Evaluate the quality of open-ended reasoning and analysis.
+scale_min: 1
+scale_max: 5
+instructions: |
+  Focus on the quality of reasoning, not just correctness.
+  A well-reasoned wrong answer may score higher on some criteria than a correct but shallow answer.
+
+criteria:
+  - name: depth
+    description: |
+      How thoroughly does the response explore the problem?
+      Does it consider root causes, implications, and edge cases?
+    weight: 0.30
+    anchors:
+      1: Surface-level only, misses key aspects
+      2: Basic exploration, some aspects addressed
+      3: Adequate depth, covers main points
+      4: Thorough analysis with good coverage
+      5: Exceptional depth, explores subtle implications
+
+  - name: coherence
+    description: |
+      Is the reasoning logically structured and internally consistent?
+      Does it flow well?
+    weight: 0.25
+    anchors:
+      1: Disjointed, contradictory
+      2: Some logical gaps or inconsistencies
+      3: Generally coherent with minor issues
+      4: Well-structured and consistent
+      5: Exceptionally clear and logical flow
+
+  - name: practicality
+    description: |
+      Are the conclusions actionable?
+      Does the response consider real-world constraints?
+    weight: 0.25
+    anchors:
+      1: Impractical or ignores constraints
+      2: Limited practicality
+      3: Reasonably actionable
+      4: Highly practical with clear steps
+      5: Immediately actionable with excellent feasibility
+
+  - name: novelty
+    description: |
+      Does the response offer original insights or unexpected connections?
+    weight: 0.20
+    anchors:
+      1: Entirely conventional
+      2: Mostly standard with minor insights
+      3: Some original thinking
+      4: Notable creative elements
+      5: Highly original and insightful

@@ -72,3 +72,32 @@ eval/
 - BigCodeBench requires Docker
 - HumanEval/MBPP use local sandbox (no Docker)
 - minds CLI must be installed separately for multi-model queries
+
+## GPQA Diamond Experiment Results (2026-01-26)
+
+Full 198-sample comparison of multi-model approaches on PhD-level science questions.
+
+### Key Findings
+
+| Configuration | Accuracy | Cost | Recommendation |
+|--------------|----------|------|----------------|
+| minds_critique | **88.4%** | $184 | Best accuracy |
+| Gemini 2.5 Pro solo | 86.4% | $4 | Best value |
+| minds_baseline | 84.3% | $77 | AVOID - worse than solo |
+| minds_critique_challenge | 86.9% | $232 | AVOID - DA hurts |
+
+**Key insight**: Critique workflow adds +4.1%, but devil's advocate HURTS (-1.5%).
+
+### Detailed Documentation
+- `experiments/GPQA_EXPERIMENT_REPORT.md` - Full methodology and results
+- `experiments/FAILURE_ANALYSIS.md` - Failure pattern analysis
+- `experiments/QUICK_REFERENCE.md` - Quick lookup guide
+
+### Solver Modes
+```bash
+# Best accuracy (88.4%)
+socrates-eval run gpqa --solver minds --solver-mode critique
+
+# Best cost/accuracy ratio (86.4%, $4)
+socrates-eval run gpqa --solver baseline --model google/gemini-2.5-pro
+```

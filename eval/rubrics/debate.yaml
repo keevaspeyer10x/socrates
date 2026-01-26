@@ -1,0 +1,53 @@
+name: debate
+version: "1.0.0"
+description: Evaluate debate-style reasoning with multiple perspectives.
+scale_min: 1
+scale_max: 5
+instructions: |
+  Evaluate the quality of deliberation, not the specific conclusion reached.
+  Good debate should steelman opposing views and acknowledge uncertainty.
+
+criteria:
+  - name: perspective_coverage
+    description: |
+      How well does the response consider multiple viewpoints and perspectives?
+    weight: 0.25
+    anchors:
+      1: Single perspective only
+      2: Acknowledges alternatives superficially
+      3: Explores 2-3 perspectives adequately
+      4: Thorough multi-perspective analysis
+      5: Comprehensive coverage of diverse viewpoints
+
+  - name: argument_quality
+    description: |
+      How strong and well-supported are the arguments presented?
+    weight: 0.25
+    anchors:
+      1: Weak, unsupported claims
+      2: Some evidence but gaps in reasoning
+      3: Reasonably supported arguments
+      4: Strong arguments with good evidence
+      5: Compelling, well-evidenced arguments
+
+  - name: synthesis
+    description: |
+      How well does the response synthesize different viewpoints into a coherent conclusion?
+    weight: 0.30
+    anchors:
+      1: No synthesis, just listing
+      2: Superficial reconciliation
+      3: Adequate integration of perspectives
+      4: Thoughtful synthesis with nuance
+      5: Masterful integration creating new insights
+
+  - name: intellectual_honesty
+    description: |
+      Does the response acknowledge uncertainty, limitations, and counterarguments fairly?
+    weight: 0.20
+    anchors:
+      1: Overconfident, ignores counterarguments
+      2: Some acknowledgment of limitations
+      3: Fair treatment of opposing views
+      4: Honest about uncertainty and limitations
+      5: Exemplary epistemic humility and fairness

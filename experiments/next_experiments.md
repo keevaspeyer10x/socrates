@@ -474,3 +474,200 @@ Based on multi-model research synthesis of published work. These techniques have
 - All experiments should use the same hard question from Test 004 as baseline for comparability
 - New question types should be pre-registered before testing to avoid cherry-picking
 - Document negative results - knowing what doesn't work is valuable
+
+---
+
+## Phase 2C Results (2026-01-24) - Integrated Findings
+
+### Experiments Completed
+
+| Experiment | Status | Key Finding |
+|------------|--------|-------------|
+| 12A: Self-Consistency (k=5) | ✅ Complete | Did NOT outperform baseline (8.3 vs 9.0 adversarial) |
+| 8B: Anti-Fabrication Prompt | ✅ Complete | **+6 adversarial points** on hallucination question |
+| 5A: Self-Critique Across Types | ✅ Complete | Generalizes: consistent 8/10 across factual, reasoning, prediction, contested |
+| 12B: CoVe | ✅ Complete | Tied with self-critique (both 9.0 adversarial) |
+| 6A: Prompt Combinations | ✅ Complete | No differentiation - questions may be too easy |
+| 10B: Structural Elements | ✅ Complete | No differentiation - all elements ≈ baseline |
+| Additive Verification | ✅ Complete | No improvement over self-critique alone |
+
+### Overall Method Rankings (71 runs, $0.38)
+
+| Method | Style | Adv | Reasoning | Avg | N |
+|--------|-------|-----|-----------|-----|---|
+| additive_verification | 9.3 | 9.0 | 9.3 | **9.2** | 3 |
+| self_critique | 8.9 | 8.6 | 9.1 | **8.9** | 10 |
+| cove_structured | 8.0 | 9.0 | 8.7 | 8.6 | 3 |
+| baseline | 8.6 | 8.1 | 8.9 | 8.5 | 17 |
+| **rigor** | 8.1 | **5.9** | 8.0 | **7.3** | 9 |
+
+### Critical Finding: rigor Underperforms
+
+`minds --rigor` (5-model synthesis) consistently scores **lowest on adversarial (5.9)** - well below single-model baseline (8.1).
+
+**However:** This is likely an **execution problem, not a concept problem**:
+- Ensemble methods work in ML generally
+- OpenAI/Anthropic spend billions on reasoning improvements
+- Those improvements are NOT multi-model - they're single-model reasoning (CoT, process reward models, extended thinking)
+
+**Hypothesis:** Our synthesis method is flawed, not multi-model itself.
+
+---
+
+## Priority 2.5: Fix rigor (NEW - Insert Before Priority 3)
+
+Based on Phase 2C findings, we need to test whether rigor can be fixed before abandoning it.
+
+### Experiment 13A: Disagreement Surfacing
+
+**Hypothesis:** Showing raw disagreement helps users more than synthesis.
+
+**Method:** Instead of synthesizing, output:
+- "3/5 models said X"
+- "2/5 models said Y"
+- "Key disagreement: [specific point]"
+
+**Success:** Users find disagreement info more useful than blended answer.
+
+---
+
+### Experiment 13B: Majority Voting vs Synthesis
+
+**Hypothesis:** Simple voting beats prose synthesis.
+
+**Method:**
+- Get 5 model responses
+- Extract key claims from each
+- Report majority position per claim
+- Compare to current synthesis
+
+**Success:** Majority voting outperforms current synthesis on adversarial score.
+
+---
+
+### Experiment 13C: Critique-Then-Synthesize
+
+**Hypothesis:** Having models critique each other before synthesis improves output.
+
+**Method:**
+1. Get 5 initial responses
+2. Have each model critique the others' responses
+3. Then synthesize with critiques visible
+
+**Success:** Critique-then-synthesize beats direct synthesis.
+
+---
+
+### Experiment 13D: Selective Synthesis
+
+**Hypothesis:** Should only synthesize when models agree.
+
+**Method:**
+- Measure agreement level (cosine similarity of responses)
+- If high agreement: synthesize normally
+- If low agreement: flag uncertainty, show divergent views
+
+**Success:** Selective approach beats always-synthesize.
+
+---
+
+### Experiment 13E: Confidence-Weighted Aggregation
+
+**Hypothesis:** Weighting by model confidence helps.
+
+**Method:**
+- Ask each model to rate confidence (1-10) on each claim
+- Weight claims by confidence in final output
+- Compare to equal-weight synthesis
+
+**Success:** Confidence-weighted beats equal-weight.
+
+---
+
+### Experiment 13F: Anti-Fabrication + rigor ⭐ DO THIS FIRST
+
+**Hypothesis:** The anti-fabrication prompt fixes rigor's fabrication problem.
+
+**Method:**
+- Run rigor with anti-fabrication instruction in synthesis prompt
+- Compare to baseline rigor
+
+**Why first:** Quick test (~30 min), may fix rigor cheaply. Anti-fabrication showed +6 adversarial in Phase 2C.
+
+**Success:** rigor + anti-fabrication matches or beats baseline adversarial score.
+
+---
+
+## Updated Quick Wins (Post-Phase 2C)
+
+| Priority | Experiment | Rationale | Status |
+|----------|------------|-----------|--------|
+| 1 | **13F: Anti-fabrication + rigor** | May fix rigor cheaply | NEW |
+| 2 | 13C: Critique-then-synthesize | Tests adversarial multi-model | NEW |
+| 3 | 5B: Cross-model critique | Does different critiquer help? | Pending |
+| 4 | 13B: Majority voting | Tests structured aggregation | NEW |
+| ~~5~~ | ~~12A: Self-consistency~~ | ~~Did not outperform~~ | ✅ Complete |
+| ~~6~~ | ~~8B: Anti-fabrication~~ | ~~+6 adversarial points~~ | ✅ Complete |
+| ~~7~~ | ~~5A: Self-critique types~~ | ~~Generalizes well~~ | ✅ Complete |
+
+---
+
+## Key Insights for Implementation
+
+### What To Ship Now
+
+1. **Anti-fabrication prompt** - Add to all prompts:
+   ```
+   IMPORTANT: Do not fabricate statistics. If you don't have a verified source
+   for a specific figure, say "I don't have a verified source" rather than
+   inventing one.
+   ```
+
+2. **Self-critique as default** - Consistent 8.6+ adversarial across all question types
+
+### What To Fix
+
+1. **rigor synthesis** - Test experiments 13A-13F before removing
+
+### What Doesn't Matter (Yet)
+
+1. **Prompt engineering variants** - No differentiation on current questions (need harder questions)
+2. **Structural elements** - No differentiation (need harder questions)
+3. **Stacking methods** - Additive ≈ single method (do one thing well)
+
+---
+
+## CRITICAL FINDING: Integration Destroys Value (2026-01-24)
+
+### Staged Evaluation Results
+
+On the Harvard CEO question:
+- GPT alone: A:9 (correctly refused to fabricate)
+- Claude alone: A:9 (correctly refused to fabricate)  
+- Gemini alone: A:3 (fabricated statistics)
+- **After multi-model integration: A:4** ← Averaging good with bad = bad
+- **After polish: A:2** ← Made it even worse
+
+### Root Cause
+When you synthesize:
+- 2 responses that say "I don't know the exact figure"
+- 1 response that fabricates "approximately 5-6%"
+
+The synthesis says something like "estimates suggest 5-6%" - turning honest uncertainty into confident fabrication.
+
+### Implication for rigor
+This explains why `--rigor` (5-model synthesis) underperforms baseline. More perspectives aren't better if synthesis corrupts the best ones.
+
+### Solution Approaches
+1. **Don't synthesize** - pick best response (requires judge)
+2. **Weighted synthesis** - weight by confidence/quality
+3. **Conservative synthesis** - preserve maximum uncertainty
+4. **Pre-filter** - only integrate responses that pass quality threshold
+
+### What Works
+From v2 experiment:
+- fullstack_lite_v2 (Claude + critique + verification): A:9
+- enhanced_single (Claude with good prompt): A:8
+- baseline: A:7
+
+Single strong model with verification >> Multi-model synthesis

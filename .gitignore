@@ -1,0 +1,43 @@
+# Virtual environments
+.venv/
+venv/
+env/
+
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+.Python
+*.so
+.eggs/
+*.egg-info/
+*.egg
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Local state files
+.eval_state.json
+.model_registry.json
+.workflow_*.db
+.workflow_*.jsonl
+.workflow_*.tmp
+
+# Test artifacts
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Logs and results (can be regenerated)
+*.log
+eval_logs/
+eval_sample_*.json
+*_responses.json
+*_results.json
+
+# Temporary files
+temp_*.txt

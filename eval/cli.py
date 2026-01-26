@@ -55,7 +55,8 @@ def status():
 @click.option("--samples", type=int, default=None, help="Limit number of samples")
 @click.option("--sample-ids", type=str, default=None, help="JSON file with sample indices or comma-separated IDs")
 @click.option("--solver-mode", type=str, default="baseline", help="Solver mode (baseline, rigor, deep) for minds solver")
-def run(benchmark: str, solver: str, model: str, samples: Optional[int], sample_ids: Optional[str], solver_mode: str):
+@click.option("--synthesizer", type=str, default=None, help="Synthesizer model for minds solver (default: same as model)")
+def run(benchmark: str, solver: str, model: str, samples: Optional[int], sample_ids: Optional[str], solver_mode: str, synthesizer: Optional[str]):
     """Run evaluation on a benchmark.
 
     BENCHMARK is the name of the benchmark (e.g., gsm8k, mmlu, swe_bench).
@@ -116,7 +117,7 @@ def run(benchmark: str, solver: str, model: str, samples: Optional[int], sample_
 
     # Run evaluation with try...finally for state cleanup (LEARNINGS recommendation)
     try:
-        _run_evaluation(benchmark, solver, model, samples, run_id, parsed_sample_ids, solver_mode)
+        _run_evaluation(benchmark, solver, model, samples, run_id, parsed_sample_ids, solver_mode, synthesizer)
         state.finish_run()
         state.save(STATE_FILE)
 
@@ -140,7 +141,8 @@ def _run_evaluation(
     samples: Optional[int],
     run_id: str,
     sample_ids: Optional[list[str | int]] = None,
-    solver_mode: str = "baseline"
+    solver_mode: str = "baseline",
+    synthesizer_model: Optional[str] = None
 ):
     """Internal function to run evaluation."""
     from inspect_ai import eval as inspect_eval
@@ -165,8 +167,12 @@ def _run_evaluation(
         solver_class = get_solver(solver)
         # Pass mode to minds solver
         if solver == "minds":
-            solver_instance = solver_class(mode=solver_mode)
-            click.echo(f"Using solver: {solver_instance.name} (mode={solver_mode})")
+            kwargs = {"mode": solver_mode}
+            if synthesizer_model:
+                kwargs["synthesizer_model"] = synthesizer_model
+            solver_instance = solver_class(**kwargs)
+            synth_info = f", synthesizer={synthesizer_model}" if synthesizer_model else ""
+            click.echo(f"Using solver: {solver_instance.name} (mode={solver_mode}{synth_info})")
         else:
             solver_instance = solver_class()
             click.echo(f"Using solver: {solver_instance.name}")
