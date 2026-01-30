@@ -1,0 +1,7 @@
+creation_rules:
+  # Default AGE key for all encrypted files
+  # Same key is shared across all keeva-devtools repositories
+  - path_regex: .*secrets\.yaml$
+    age: age1cs94hvz4rkj5em26wpx6eff8cu5gkjulw0c2d6dcp4szedq2qy2qgmq3ts
+  - path_regex: .*\.enc\.yaml$
+    age: age1cs94hvz4rkj5em26wpx6eff8cu5gkjulw0c2d6dcp4szedq2qy2qgmq3ts
