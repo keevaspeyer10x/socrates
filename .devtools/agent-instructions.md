@@ -26,7 +26,7 @@ source ~/keeva-devtools/scripts/secrets-loader.sh
 
 ## Method 3: SOPS/AGE (Legacy)
 ```bash
-export SOPS_KEY_PASSWORD="I love vibe coding"
+# Script will prompt for password if needed
 source ~/keeva-devtools/scripts/secrets-loader.sh
 ```
 
