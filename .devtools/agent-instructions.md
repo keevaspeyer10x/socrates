@@ -1,29 +1,36 @@
-export SECRETS_PASSWORD="I love vibe coding"
-export SOPS_KEY_PASSWORD="I love vibe coding"
+# Session Bootstrap
 
-# Session Bootstrap (Claude Code Web Only)
+**Load secrets using one of these methods (in priority order):**
 
-**Skip this if running locally** - your environment already has access configured.
-
-For Claude Code **web sessions**, run this at the start to enable cross-repo access and API keys:
-
+## Method 1: Infisical (Recommended)
 ```bash
-# 1. Install gh if needed
-which gh || (apt-get update && apt-get install -y gh)
+# Install Infisical CLI if needed
+npm install -g @infisical/cli
 
-# 2. Decrypt age key (needed for SOPS)
-export SOPS_KEY_PASSWORD="I love vibe coding"  # Default dev password
-mkdir -p /root/.config/sops/age
-openssl enc -d -aes-256-cbc -pbkdf2 -in .claude/keys/age.key.enc \
-  -out /root/.config/sops/age/keys.txt -pass pass:"$SOPS_KEY_PASSWORD"
+# Set your service token (get from https://secrets.keeva.space)
+export INFISICAL_TOKEN="st.xxx.xxx"
 
-# 3. Load ALL secrets as environment variables
-eval "$(sops -d secrets.enc.yaml | sed 's/: /=/' | sed 's/^/export /')"
-export GH_TOKEN="$github_token"  # gh CLI uses GH_TOKEN
-
-# 4. Verify it works
-gh auth status
+# Load secrets
+source ~/keeva-devtools/scripts/secrets-loader.sh
 ```
+
+## Method 2: .env.local (BYOK - Bring Your Own Keys)
+```bash
+# Copy template and add your keys
+cp .env.example .env.local
+# Edit .env.local with your API keys
+
+# Load secrets
+source ~/keeva-devtools/scripts/secrets-loader.sh
+```
+
+## Method 3: SOPS/AGE (Legacy)
+```bash
+export SOPS_KEY_PASSWORD="I love vibe coding"
+source ~/keeva-devtools/scripts/secrets-loader.sh
+```
+
+The `secrets-loader.sh` script automatically detects which method is available and loads secrets accordingly.
 
 ## Cross-Repository Awareness
 
